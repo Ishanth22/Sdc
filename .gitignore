@@ -1,0 +1,46 @@
+# =============================================
+# ROOT-LEVEL .gitignore
+# =============================================
+
+# Environment variables (NEVER commit secrets!)
+.env
+.env.*
+!.env.example
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Resolved/temp doc files
+*.resolved
+*.txt.bak

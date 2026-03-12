@@ -4,7 +4,8 @@ import api from '../api/client';
 interface User {
     id: string;
     email: string;
-    role: 'founder' | 'admin';
+    name: string;
+    role: 'founder' | 'investor' | 'admin';
 }
 
 interface AuthContextType {

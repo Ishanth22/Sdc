@@ -4,6 +4,7 @@ import StartupProfile from '../models/StartupProfile';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { calculateVitalityScore } from '../services/vitalityScore';
 import { computeBenchmarks } from '../services/benchmarkAggregator';
+import { invalidateAllCaches } from '../services/forecasting';
 
 const router = Router();
 
@@ -44,6 +45,9 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // Recalculate vitality score
         const scoreResult = await calculateVitalityScore(profile._id, period);
+
+        // Invalidate ALL analysis caches — data changed, next page visit will regenerate
+        await invalidateAllCaches(profile._id);
 
         res.status(201).json({ metrics, vitalityScore: scoreResult });
     } catch (error: any) {

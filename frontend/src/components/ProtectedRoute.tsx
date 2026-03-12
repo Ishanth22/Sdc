@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface Props {
     children: React.ReactNode;
-    requiredRole?: 'founder' | 'admin';
+    requiredRole?: 'founder' | 'investor' | 'admin';
 }
 
 const ProtectedRoute: React.FC<Props> = ({ children, requiredRole }) => {
@@ -19,7 +19,10 @@ const ProtectedRoute: React.FC<Props> = ({ children, requiredRole }) => {
     }
 
     if (!user) return <Navigate to="/" replace />;
-    if (requiredRole && user.role !== requiredRole) return <Navigate to="/dashboard" replace />;
+    if (requiredRole && user.role !== requiredRole) {
+        const redirect = user.role === 'admin' ? '/admin' : user.role === 'investor' ? '/investor' : '/dashboard';
+        return <Navigate to={redirect} replace />;
+    }
 
     return <>{children}</>;
 };

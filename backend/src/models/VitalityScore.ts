@@ -9,6 +9,11 @@ export interface IVitalityScore extends Document {
         operational: number;
         innovation: number;
         impact: number;
+        revenueGrowth: number;
+        userGrowth: number;
+        burnEfficiency: number;
+        churnStability: number;
+        runwayStability: number;
     };
     riskFlags: string[];
     createdAt: Date;
@@ -22,7 +27,12 @@ const VitalityScoreSchema = new Schema<IVitalityScore>({
         financial: { type: Number, default: 0 },
         operational: { type: Number, default: 0 },
         innovation: { type: Number, default: 0 },
-        impact: { type: Number, default: 0 }
+        impact: { type: Number, default: 0 },
+        revenueGrowth: { type: Number, default: 0 },
+        userGrowth: { type: Number, default: 0 },
+        burnEfficiency: { type: Number, default: 0 },
+        churnStability: { type: Number, default: 0 },
+        runwayStability: { type: Number, default: 0 }
     },
     riskFlags: [{ type: String }],
     createdAt: { type: Date, default: Date.now }

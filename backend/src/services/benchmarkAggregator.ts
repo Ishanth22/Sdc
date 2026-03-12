@@ -29,6 +29,7 @@ export async function computeBenchmarks(period: string): Promise<void> {
                 avgCac: avg(metrics.map(m => m.operational.cac)),
                 avgLtv: avg(metrics.map(m => m.operational.ltv)),
                 avgActiveUsers: avg(metrics.map(m => m.operational.activeUsers)),
+                avgChurnRate: avg(metrics.map(m => m.operational.churnRate || 0)),
                 avgTeamSize: avg(startups.map(s => s.teamSize)),
                 avgRndSpend: avg(metrics.map(m => m.innovation.rndSpend))
             };

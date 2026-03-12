@@ -1,0 +1,697 @@
+# NSPMS — National Startup Performance Monitoring System
+## Complete Feature Documentation
+
+> **Version:** Production  
+> **Stack:** Node.js + TypeScript + Express (Backend) · React + Vite + TypeScript (Frontend) · MongoDB · OpenRouter AI (arcee-ai/trinity-large-preview)  
+> **Last Updated:** March 2025  
+
+---
+
+## Table of Contents
+
+1. [Authentication & Access Control](#1-authentication--access-control)
+2. [Startup Profile Management](#2-startup-profile-management)
+3. [Metrics Submission](#3-metrics-submission)
+4. [Founder Dashboard](#4-founder-dashboard)
+5. [Startup Vitality Score (Health Score)](#5-startup-vitality-score-health-score)
+6. [Smart Alerts System](#6-smart-alerts-system)
+7. [AI-Powered Forecasting](#7-ai-powered-forecasting)
+8. [AI Intelligence Center (Risk & Benchmarking)](#8-ai-intelligence-center-risk--benchmarking)
+9. [AI Advisor (Strategy Chatbot)](#9-ai-advisor-strategy-chatbot)
+10. [Milestones & OKR Tracker](#10-milestones--okr-tracker)
+11. [Custom KPI Builder](#11-custom-kpi-builder)
+12. [Metrics History & Audit Trail](#12-metrics-history--audit-trail)
+13. [Scenario Simulation](#13-scenario-simulation)
+14. [Reports & Export](#14-reports--export)
+15. [Investor Dashboard](#15-investor-dashboard)
+16. [Admin Dashboard](#16-admin-dashboard)
+
+---
+
+## 1. Authentication & Access Control
+
+### What It Is
+A secure, role-based authentication system that controls who can access what. There are three user roles — **Founder**, **Investor**, and **Admin** — each with a different set of pages and permissions.
+
+### How It Works
+
+#### Login
+- User enters email + password on the Login page (`/login`).
+- The frontend calls `POST /api/auth/login`.
+- The backend fetches the user from MongoDB, compares the submitted password against the stored **bcrypt hash**.
+- **Account Locking:** After **5 failed login attempts**, the account is locked for **15 minutes**. The lock auto-lifts after the timer expires.
+- On success, a **JWT token** (JSON Web Token) is returned and stored in the browser's `localStorage`.
+- All subsequent API calls carry this token in the `Authorization: Bearer <token>` header.
+
+#### Registration
+- New founders register from the same Login page (toggled to "Register" mode).
+- The system creates a User record + a blank StartupProfile linked to that user.
+
+#### Role-Based Routing
+- The frontend uses a [ProtectedRoute](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/frontend/src/components/ProtectedRoute.tsx#10-29) component that checks `user.role` before allowing access.
+- **Founder** → sees Dashboard, Metrics, Forecasting, AI Risk, AI Advisor, Milestones, KPIs, Reports, Simulation.
+- **Investor** → sees the Investor Dashboard (read-only view of all startups).
+- **Admin** → sees the Admin Dashboard (manage all startups, users, subscriptions).
+
+#### Demo Credentials
+| Email | Password | Role |
+|---|---|---|
+| founder1@nspms.in | password123 | Founder |
+| investor@nspms.in | password123 | Investor |
+| admin@nspms.in | password123 | Admin |
+
+#### Implementation Type
+> 🔧 **Rule-Based / Standard Auth** — No AI involved. Uses industry-standard JWT + bcrypt.
+
+---
+
+## 2. Startup Profile Management
+
+### What It Is
+Every founder has a startup profile that stores the company's identity information. This profile is used across all AI features to provide sector and stage context.
+
+### Fields Captured
+| Field | Description |
+|---|---|
+| Company Name | Official name of the startup |
+| Sector | Industry (Fintech, SaaS, Healthtech, Edtech, etc.) |
+| Stage | Funding stage (Idea, Seed, Early, Growth, Series A+) |
+| City | Headquarters location |
+| Team Size | Number of full-time employees |
+| Founded Date | Incorporation date |
+| CIN | Company Identification Number (India) |
+| Website, LinkedIn, Twitter | Social links |
+| Description | Elevator pitch / company description |
+
+### How It Works
+- Accessible via the **Profile** page (`/profile`).
+- Stored in the `StartupProfile` MongoDB collection, linked to the User by `userId`.
+- **The sector and stage fields directly influence AI analysis** — the AI models are given this context in every prompt. For example, a "Fintech" startup will get RBI-specific regulatory risk analysis, while a "SaaS" startup gets DPDP Act compliance warnings.
+
+#### Implementation Type
+> 🔧 **Standard CRUD** — No AI involved. Profile data is stored and retrieved from MongoDB.
+
+---
+
+## 3. Metrics Submission
+
+### What It Is
+The primary data entry point for founders. Each submission captures one month's performance across four categories: Financial, Operational, Innovation, and Impact.
+
+### Fields Captured
+
+**Financial**
+- Monthly Revenue (₹)
+- Monthly Expenses (₹)
+- Burn Rate (₹/month)
+- Runway (months of cash remaining)
+- Total Funding Raised (₹)
+- Latest Funding Amount, Type (Equity/Debt/Grant), and Investor Name
+
+**Operational**
+- Active Users (monthly)
+- New User Signups
+- Customer Acquisition Cost (CAC) (₹)
+- Lifetime Value (LTV) (₹)
+- Churn Rate (%)
+- Gross Merchandise Value (GMV) (₹)
+- Cities Served
+
+**Innovation**
+- Patents Filed / Granted
+- Trademarks Filed
+- R&D Spend (₹)
+
+**Impact**
+- Direct Jobs Created
+- Women Employees
+- Rural Employees
+- Exports (₹)
+
+### What Happens After Submission
+When a founder submits metrics, the backend automatically triggers:
+1. **Vitality Score calculation** — computes a new health score for that period.
+2. **Alert generation** — checks all thresholds and creates warnings if needed.
+3. **Cache invalidation** — wipes all AI forecasting, risk, and benchmark caches so the next page visit regenerates with fresh AI analysis.
+
+#### Implementation Type
+> 🔧 **Standard CRUD + Rule-Based Triggers** — No AI in the submission itself. AI is triggered on the next visit to forecasting/risk pages.
+
+---
+
+## 4. Founder Dashboard
+
+### What It Is
+The main home screen for founders. Provides a real-time visual overview of the startup's health across all key metrics.
+
+### What's On the Dashboard
+
+#### Header Area
+- **Company Name, Sector, Stage, City** badges
+- **Risk Level Badge** (Low 🟢 / Moderate 🟡 / High 🟠 / Critical 🔴) — derived from vitality score risk flags
+- **Funding Readiness %** — a composite score (0–100%) based on revenue, user base, team size, runway, and health score
+- **Vitality Score Gauge** — animated circular dial showing the overall health score (0–100)
+- **Score Explanation** — bullet-point breakdown of what is driving the score up or down
+
+#### Score Component Cards (5 pillars)
+Each pillar shows a score out of 100 with a color-coded progress bar:
+| Pillar | Weight | What It Measures |
+|---|---|---|
+| Revenue Growth | 25% | Month-over-month revenue change |
+| User Growth | 20% | Month-over-month active user change |
+| Burn Efficiency | 20% | How well revenue offsets burn |
+| Churn Stability | 15% | How low and stable churn rate is |
+| Runway Stability | 20% | Months of runway stability |
+
+#### KPI Cards (6 metrics)
+Revenue, Burn Rate, Runway, Active Users, Churn Rate, LTV/CAC Ratio — each with growth % badges showing change from the previous month.
+
+#### Charts (5 charts, all data-driven)
+| Chart | Type | Data Source |
+|---|---|---|
+| Revenue Growth Trend | Area Chart | All months of submitted metrics |
+| User Growth | Bar Chart | Monthly active + new users |
+| Revenue vs Expenses | Bar Chart | Side-by-side comparison per month |
+| Burn Rate Trend | Line Chart | Burn rate + revenue overlay |
+| Expense Distribution | Donut Pie | Estimated breakdown by category |
+| Startup vs Industry Avg | Progress Bar Comparison | Your values vs sector benchmark averages |
+
+#### Smart Alerts Panel
+- Dismissible alert cards (warning/critical severity).
+- Automatically generated by the backend when metrics are submitted.
+- Example: "🚨 Critically Low Runway — Your current runway of 3 months is critically low."
+
+#### Implementation Type
+> 🔧 **Rule-Based** — All charts and KPI cards are computed from actual submitted metrics. No AI is used on this page. The vitality score calculation (Health Score) is rule-based math (see Feature #5).
+
+---
+
+## 5. Startup Vitality Score (Health Score)
+
+### What It Is
+A single composite score (0–100) that summarizes the startup's overall health. Calculated automatically every time new metrics are submitted.
+
+### How the Score is Calculated (Rule-Based Formula)
+
+Each of the 5 components is scored independently (0–100), then weighted:
+
+```
+Final Score = (revenueGrowth × 0.25) + (userGrowth × 0.20) + 
+              (burnEfficiency × 0.20) + (churnStability × 0.15) + 
+              (runwayStability × 0.20)
+```
+
+**Revenue Growth Score**
+- Compares current month vs previous month revenue.
+- 100 if growth ≥ 30%, scales down to 0 if declining.
+
+**User Growth Score**
+- Compares active user count month-over-month.
+- Scaled against sector typical growth rates.
+
+**Burn Efficiency Score**
+- Ratio of revenue to burn rate. Score = 100 if revenue ≥ burn (profitable). Drops sharply when burn > revenue.
+
+**Churn Stability Score**
+- Score = 100 if churn = 0%. Drops as churn rises. Score = 0 if churn ≥ 20%.
+
+**Runway Stability Score**
+- Score = 100 if runway ≥ 18 months. Drops linearly. Score = 0 if runway < 1 month.
+
+### Derived Outputs (also rule-based)
+- **Risk Level:** Low (0 flags), Moderate (1–2 flags), High (3 flags), Critical (4+ flags)
+- **Risk Flags:** Auto-generated text like "Low runway," "High churn," "Falling revenue"
+- **Funding Readiness %:** Points given for: revenue > 0, revenue > ₹5L, users > 1000, team ≥ 20, runway ≥ 6 months, health score ≥ 60
+- **Score Explanation:** Auto-generated bullet points explaining what is helping or hurting the score.
+
+#### Implementation Type
+> 🔧 **Fully Rule-Based (Mathematical)** — No AI. Purely weighted formula calculated in [vitalityScore.ts](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/backend/src/services/vitalityScore.ts).
+
+---
+
+## 6. Smart Alerts System
+
+### What It Is
+An automated notification system that watches the startup's metrics and generates actionable alerts when something needs attention.
+
+### Alert Types and Thresholds
+
+| Alert | Trigger | Severity |
+|---|---|---|
+| Critically Low Runway | Runway < 3 months | Critical 🚨 |
+| Low Runway Warning | Runway < 6 months | Warning ⚠️ |
+| Revenue Decline | Revenue dropped > 20% month-over-month | Warning ⚠️ |
+| High Churn | Churn rate > 15% | Critical 🚨 |
+| Elevated Churn | Churn rate > 8% | Warning ⚠️ |
+| LTV/CAC Danger | LTV/CAC ratio < 1x | Critical 🚨 |
+| Unhealthy LTV/CAC | LTV/CAC ratio < 3x | Warning ⚠️ |
+| High Burn Relative to Revenue | Burn > 3× revenue | Warning ⚠️ |
+
+### How It Works
+- Alerts are generated server-side when `POST /api/metrics` is called.
+- Stored in the [Alert](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/frontend/src/pages/Dashboard.tsx#37-43) MongoDB collection.
+- Shown on the Dashboard with dismiss functionality.
+- Old alerts for the same period are cleared before new ones are created (deduplication).
+
+#### Implementation Type
+> 🔧 **Rule-Based** — Pure threshold comparisons. No AI.
+
+---
+
+## 7. AI-Powered Forecasting
+
+### What It Is
+A 6-month forward-looking projection of revenue, expenses, user growth, and cash runway. The charts show historical data (solid line) connected to AI-predicted future values (dashed line).
+
+### The Forecasting Flow (Step by Step)
+
+```
+1. Founder visits /forecasting
+2. Backend checks MongoDB cache
+   ├── CACHE HIT → Return cached AI result instantly (no API call)
+   └── CACHE MISS → Proceed to generate
+3. Rule-Based Baseline is computed (math fallback)
+4. AI is called with full startup context (no baseline numbers shared)
+5. AI generates 6-month forecast independently
+   ├── SUCCESS → Cache AI result → Return to frontend
+   └── FAILURE / TIMEOUT → Fall back to rule-based result
+```
+
+### What the AI Receives (Prompt Context)
+- Startup name, sector, stage, city, team size
+- Sector average monthly growth rate
+- Seasonal boost months and percentages
+- Regulatory burden level (low/medium/high)
+- Full historical metrics — all submitted months with revenue, expenses, burn, runway, users, CAC, LTV, churn
+
+### What the AI Generates
+The AI outputs structured JSON with:
+- **6 months of revenue forecasts** (e.g., April 2025: ₹7,20,000)
+- **6 months of expense forecasts**
+- **6 months of user growth forecasts**
+- **Projected runway runout date**
+- **Confidence level** (low / medium / high)
+- **5 data-driven insights** specific to the startup
+- **Overall strategic outlook** (2–3 sentences)
+- **Critical action** — the single most important thing to do in the next 30 days
+
+### The Charts
+
+| Chart | X-Axis | Y-Axis | Lines |
+|---|---|---|---|
+| Revenue Forecast | Period (YYYY-MM) | ₹ Amount | Solid = actual, Dashed = AI forecast |
+| Expense Forecast | Period (YYYY-MM) | ₹ Amount | Solid = actual, Dashed = AI forecast |
+| User Growth Forecast | Period (YYYY-MM) | User Count | Solid = actual, Dashed = AI forecast |
+| Runway Projection | Period (YYYY-MM) | Months of runway | Computed from AI's revenue/expense curves |
+
+### Smart Caching
+- Results are cached in MongoDB with a **data hash** (SHA-256 of model name + all metric values + sector + stage).
+- Cache is automatically invalidated when:
+  - New metrics are submitted (any change in data).
+  - The AI model is changed (model name is part of the hash).
+- Cache is persistent across server restarts (stored in DB, not RAM).
+- The frontend shows: 🤖 **AI-Enhanced** badge (purple, pulsing) when AI-powered, and the exact cache timestamp.
+
+### Fallback
+If the AI API fails or times out (90-second timeout), the system silently falls back to the **rule-based forecast** (weighted moving average + linear regression). The badge will not show as "AI-Enhanced."
+
+#### Implementation Type
+> 🤖 **Primarily AI-Powered** (model: `arcee-ai/trinity-large-preview:free` via OpenRouter)  
+> 🔧 **Rule-Based Fallback** when AI is unavailable.
+
+---
+
+## 8. AI Intelligence Center (Risk & Benchmarking)
+
+### What It Is
+A two-tab page that provides AI-generated risk prediction and competitive benchmarking analysis. Accessible at `/ai-risk`.
+
+---
+
+### Tab 1: Risk Prediction
+
+#### What It Shows
+- **AI Risk Score** (0–100) — Large gradient header card, color-coded red (high risk) → green (low risk)
+- **Overall Risk Level** — Critical / High / Moderate / Low
+- **Risk Score Progress Bar** — Visual gauge from Low to Critical
+- **Trend Analysis** — A paragraph explaining the startup's risk trajectory over time
+- **AI Hidden Risk Detection** — Risks that are not obvious from individual metrics but emerge from pattern analysis
+- **Risk Predictions Grid** — Up to 6 prediction cards, each showing:
+  - Risk category (funding, churn, market, etc.)
+  - Specific prediction text
+  - Probability (high / medium / low)
+  - Timeframe (e.g., "3–6 months")
+  - Impact level (high / medium / low)
+- **AI Recommended Actions** — Numbered list of actions the founder should take
+
+#### How It Works (AI Flow)
+- All Metrics + Vitality Scores + Benchmark data are sent to the AI.
+- The AI performs pattern recognition across all months of data.
+- Results are cached in MongoDB with data-hash invalidation (same cache system as Forecasting).
+- Has a "🔄 Re-analyze" button to force a fresh AI call regardless of cache.
+
+---
+
+### Tab 2: AI Benchmarking
+
+#### What It Shows
+- **Competitive Position** — e.g., "Top Quartile," "Above Average," "Below Average"
+- **Peer Comparison** — Summary sentence about how this startup compares to peers in the same sector and stage
+- **Strength Areas** — Metrics where the startup outperforms industry average (with % difference badges)
+- **Areas to Improve** — Metrics where the startup underperforms (with % difference badges)
+- **Competitive Edge** — AI narrative on what makes this startup distinctly competitive
+- **AI-Detected Opportunities** — Hidden growth opportunities the AI identifies from the data
+- **AI Recommendations** — Numbered strategic actions specific to the startup's competitive position
+
+#### How It Works
+- Uses the [Benchmark](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/backend/src/services/aiRiskEngine.ts#279-289) MongoDB collection for industry averages by sector + stage.
+- The AI compares the startup's actual metrics against these benchmarks.
+- Produces a narrative analysis that goes beyond simple "you are X% above average" math.
+- Cached separately from the risk prediction cache (different `cacheType`).
+
+#### Implementation Type
+> 🤖 **Fully AI-Powered** — Both tabs use the AI model via OpenRouter.  
+> 🔧 **Rule-Based Fallback** — If AI fails, basic statistical comparison is used.
+
+---
+
+## 9. AI Advisor (Strategy Chatbot)
+
+### What It Is
+A conversational AI assistant specific to the startup's data. Founders can ask free-form business questions and get data-grounded answers.
+
+### How It Works
+- Accessible at `/advisor`.
+- When a founder types a question (e.g., "Should I raise funding now or wait?"), the system:
+  1. Loads the startup's full profile, latest metrics, vitality score, and milestones.
+  2. Sends all of this as context to the AI model.
+  3. The AI responds with an answer grounded in the startup's actual numbers.
+- The AI knows the founder's revenue, burn rate, runway, user growth, churn — so answers are personalized, not generic.
+- Conversation history is maintained in the session (multi-turn chat).
+
+### Example Questions
+- "What is my biggest risk right now?"
+- "How do I improve my LTV/CAC ratio?"
+- "Should I expand to more cities or deepen existing ones?"
+- "When should I start raising Series A?"
+
+#### Implementation Type
+> 🤖 **Fully AI-Powered** — Every message calls the AI API. No caching (conversational).
+
+---
+
+## 10. Milestones & OKR Tracker
+
+### What It Is
+A project management feature where founders track company milestones and OKRs (Objectives and Key Results) with deadlines, progress percentages, and key result tracking.
+
+### Two Modes
+
+#### Standard Milestones
+- Title, Description, Category (Product / Funding / Team / Market / Legal / Other), Deadline
+- Completion percentage (0–100%) with a drag slider
+- One-click "✓ Complete" button that marks completion with a timestamp
+- Overdue detection — red highlight if deadline passed and not 100%
+
+#### OKR Mode (Objectives and Key Results)
+- Supports Quarterly / Annual / Custom objective types
+- Each OKR can have multiple **Key Results**, each with:
+  - Title
+  - Target value (numeric)
+  - Current value (with a live drag slider to update progress)
+  - Unit (e.g., %, ₹, users)
+  - Color-coded progress bar (green if ≥ 100%, amber if ≥ 70%, indigo otherwise)
+
+### Dashboard Metrics
+- Overall progress bar showing average completion across all items
+- Count of Completed / Total
+
+### Filtering
+Three tabs: All / Milestones Only / OKRs Only
+
+#### Implementation Type
+> 🔧 **Standard CRUD** — No AI. All data stored in the [Milestone](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/frontend/src/pages/Milestones.tsx#16-363) MongoDB collection.
+
+---
+
+## 11. Custom KPI Builder
+
+### What It Is
+Allows founders to define their own business-specific metrics that go beyond the standard fields — such as LTV/CAC Ratio, Burn Multiple, NRR, Revenue per Employee, or any domain-specific metric.
+
+### How It Works
+- Founder defines:
+  - **KPI Name** (e.g., "Net Revenue Retention")
+  - **Formula** (descriptive, e.g., `"revenue / activeUsers"`)
+  - **Unit** (e.g., %, ₹, x, ratio)
+  - **Description** explaining what the KPI measures and the target
+- Values are tracked **per period** — each month, the founder enters the computed value for that KPI.
+- Displayed as a **line chart** showing the trend over time.
+- Multiple KPIs are shown in a card grid.
+
+### Pre-seeded Demo KPIs (for demo account)
+| KPI | Formula | What It Tells You |
+|---|---|---|
+| LTV/CAC Ratio | ltv / cac | Customer value vs acquisition cost. Target: > 3x |
+| Revenue per Employee | revenue / teamSize | Team efficiency |
+| Burn Multiple | burnRate / newRevenue | Are you burning money efficiently? Target: < 1x |
+| NRR (Net Revenue Retention) | expansion - churn | Whether existing customers are growing. Target: > 100% |
+
+#### Implementation Type
+> 🔧 **Standard CRUD** — No AI. Stored in [CustomKPI](file:///c:/Users/Mohammed%20Muksith%20S/sdc/nspms/backend/src/models/CustomKPI.ts#3-12) MongoDB collection.
+
+---
+
+## 12. Metrics History & Audit Trail
+
+### What It Is
+A read-only view of all submitted metrics organized chronologically, plus a complete audit log of all changes made in the system.
+
+### Metrics History (`/history`)
+- Table showing all submitted metric periods in reverse chronological order.
+- Each row shows: Period, Revenue, Burn Rate, Runway, Active Users, Churn, CAC, LTV/CAC.
+- Vitality score for each period also shown.
+
+### Audit Log
+- Every action in the system is logged: metric submissions, profile updates, alert dismissals, etc.
+- Stored in the `AuditLog` MongoDB collection.
+- Each log entry contains: user, action type, timestamp, IP address.
+
+#### Implementation Type
+> 🔧 **Standard Read** — No AI. Direct MongoDB queries.
+
+---
+
+## 13. Scenario Simulation
+
+### What It Is
+A "what-if" analysis tool that lets founders simulate how changes to their key metrics would impact their overall startup health — without affecting real data.
+
+### How It Works
+- Sliders let the founder adjust:
+  - **Revenue Change** (−50% to +100%)
+  - **Expense Reduction** (0% to −50%)
+  - **Additional Funding** (₹ amount)
+  - **Churn Improvement** (0% to −80%)
+- Click **"🔬 Run Simulation"** to instantly see the impact.
+
+### What It Shows After Simulation
+
+**Radar Chart (Current vs Simulated)**
+- 5-axis radar comparing: Revenue, Runway, Health Score, Users, Retention
+- Gray = Current state, Amber = Simulated state
+- Visually shows which axes improve or worsen
+
+**Detailed Comparison Table**
+- Side-by-side: Current value vs Simulated value vs Change (+ or −)
+- Metrics shown: Revenue, Burn Rate, Runway, Health Score, Churn Rate, LTV, Simulated Risk Level
+
+### Use Case
+- "What if we cut costs by 20% and raise ₹1 Cr?" → See if runway extends to 18+ months.
+- "What if revenue drops 30%?" → See how much the health score drops.
+
+#### Implementation Type
+> 🔧 **Rule-Based Math** — The simulation runs the same vitality score formula on the adjusted numbers. No AI involved.
+
+---
+
+## 14. Reports & Export
+
+### What It Is
+A document generation and export system for producing investor-ready reports.
+
+### Features
+
+#### Performance Summary Report
+- Generated on-demand by clicking the card.
+- Pulls: company info, latest health score + risk level, all historical metrics, milestone progress, active alerts.
+- Formatted as a clean printable document inside the browser.
+
+#### Export to CSV
+- Downloads all metrics history as a `.csv` file (Excel-compatible).
+- Includes all financial, operational, innovation, and impact fields per period.
+
+#### Print / PDF
+- Uses the browser's native print dialog.
+- The report is styled with `print:` CSS classes so it renders cleanly in black and white for printing or saving as PDF.
+
+#### Report Contents
+- Company header (name, sector, stage, city, team size, generation date)
+- Health Score (score/100 + risk level)
+- Latest Metrics (8 KPI cards)
+- Historical Metrics Table (full table of all submitted periods)
+- Milestones (completed ✅ and in-progress ⏳)
+- Active Alerts
+
+#### Implementation Type
+> 🔧 **Rule-Based / Data Aggregation** — No AI. Pulls data from MongoDB and formats it.
+
+---
+
+## 15. Investor Dashboard
+
+### What It Is
+A read-only portal for investors (role: `investor`) to browse all startups on the platform, discover investment opportunities, and compare startups side-by-side.
+
+### Key Features
+
+#### Startup Discovery
+- **Card grid** showing all startups with: Company Name, Sector, Stage, Health Score, Revenue, Active Users, Runway, Revenue Growth %.
+- **Risk Level badge** on each card (Low / Moderate / High / Critical).
+- **Funding Readiness bar** showing how investment-ready the startup is.
+
+#### Filtering & Sorting
+- **Search** by company name.
+- **Filter by Sector** (Fintech, SaaS, Healthtech, etc.)
+- **Filter by Stage** (Idea, Seed, Early, Growth)
+- **Sort by:** Health Score / Funding Readiness / Revenue
+
+#### Side-by-Side Comparison
+- Click any two startup cards to select them (highlighted with blue ring).
+- Click **"⚖️ Compare Selected"** to open a comparison panel.
+- Shows:
+  - **Key Stats Side-by-Side:** Health Score, Revenue, Users, Runway, Burn, Churn, Team, City
+  - **Radar Chart:** Overlapping spider chart showing 5 score components for both startups simultaneously (indigo vs violet)
+
+#### Implementation Type
+> 🔧 **Standard Read with Aggregation** — No AI. Backend query aggregates latest score and metrics per startup.
+
+---
+
+## 16. Admin Dashboard
+
+### What It Is
+A management panel for platform administrators (role: `admin`) to oversee all startups, users, and subscriptions.
+
+### Features
+
+#### Platform Overview
+- Total startups, active users, average health score, revenue statistics across the platform.
+
+#### Startup Management
+- List of all startups with health scores and activity status.
+- Click into any startup to see full details: profile, all metrics, current score, milestones.
+
+#### User Management
+- View all registered users.
+- Ability to change subscription plans.
+
+#### Subscription Tiers
+- **Free** — Basic metrics and dashboard.
+- **Pro** — Adds Reports, Forecasting, AI Advisor.
+- **Enterprise** — Adds Scenario Simulation, advanced features.
+- Admins can manually assign plans to any startup.
+
+#### Implementation Type
+> 🔧 **Standard CRUD + Aggregation** — No AI. MongoDB aggregation pipelines for platform statistics.
+
+---
+
+## Summary: AI vs Rule-Based Feature Map
+
+| Feature | AI-Powered | Rule-Based |
+|---|---|---|
+| Login & Authentication | ❌ | ✅ |
+| Startup Profile | ❌ | ✅ |
+| Metrics Submission | ❌ | ✅ |
+| Vitality Score (Health Score) | ❌ | ✅ (weighted formula) |
+| Smart Alerts | ❌ | ✅ (threshold rules) |
+| **Forecasting Charts** | ✅ (primary) | ✅ (fallback) |
+| **Forecast Insights Text** | ✅ | ❌ |
+| **AI Risk Prediction** | ✅ (primary) | ✅ (fallback) |
+| **AI Benchmarking** | ✅ (primary) | ✅ (fallback) |
+| **AI Advisor Chatbot** | ✅ (always) | ❌ |
+| Milestones & OKRs | ❌ | ✅ |
+| Custom KPIs | ❌ | ✅ |
+| Scenario Simulation | ❌ | ✅ |
+| Reports & Export | ❌ | ✅ |
+| Investor Dashboard | ❌ | ✅ |
+| Admin Dashboard | ❌ | ✅ |
+
+---
+
+## AI Architecture Summary
+
+```
+OpenRouter API (arcee-ai/trinity-large-preview:free)
+         │
+         ├── forecasting.ts     → 6-month revenue/expense/user forecasts
+         │                         Temperature: 0.6, Max tokens: 4096
+         │                         Timeout: 90 seconds
+         │
+         ├── aiRiskEngine.ts    → Risk prediction + benchmarking analysis
+         │                         Called on /ai-risk page visit
+         │
+         └── aiAdvisor.ts       → Conversational chatbot answers
+                                   Called on every user message
+
+MongoDB Cache (AnalysisCache collection)
+         ├── cacheType: 'forecast'         → Forecasting results
+         ├── cacheType: 'risk-prediction'  → Risk analysis results
+         └── cacheType: 'benchmark'        → Benchmarking results
+
+Cache Invalidation Trigger:
+  POST /api/metrics → invalidateAllCaches() → deletes all 3 caches
+  → Next page visit regenerates all AI results fresh
+
+Cache Key (dataHash):
+  SHA-256( modelName + allMetrics + sector + stage )
+  Changing the model OR submitting new metrics = cache miss = new AI call
+```
+
+---
+
+## Data Flow Diagram
+
+```
+Founder Submits Metrics
+         │
+         ▼
+MongoDB: Metrics Collection
+         │
+         ├──→ VitalityScore calculation (rule-based math)
+         │         └──→ MongoDB: VitalityScore Collection
+         │
+         ├──→ Alert generation (threshold rules)
+         │         └──→ MongoDB: Alert Collection
+         │
+         └──→ Cache invalidation (deletes AI caches)
+                   └──→ Next page visit triggers AI call
+
+Founder Visits /forecasting
+         │
+         ▼
+GET /api/forecast
+         │
+         ├── Check MongoDB cache (hash match?)
+         │         HIT → Return cached AI result instantly
+         │
+         └── MISS → Call arcee-ai/trinity AI model
+                         │
+                         ├── SUCCESS → Cache + Return AI result
+                         └── FAILURE → Return rule-based math result
+```
+
+---
+
+*This document covers the complete feature set of the NSPMS platform as implemented. Generated from full codebase analysis of backend routes, services, models, and frontend pages.*

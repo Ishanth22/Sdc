@@ -5,8 +5,10 @@ export interface IMetrics extends Document {
     period: string; // YYYY-MM
     financial: {
         revenue: number;
+        monthlyExpenses: number;
         burnRate: number;
         runwayMonths: number;
+        totalFunding: number;
         fundingAmount: number;
         fundingType: string;
         investorName: string;
@@ -16,6 +18,7 @@ export interface IMetrics extends Document {
         newUsers: number;
         cac: number;
         ltv: number;
+        churnRate: number;
         gmv: number;
         citiesServed: number;
     };
@@ -39,8 +42,10 @@ const MetricsSchema = new Schema<IMetrics>({
     period: { type: String, required: true },
     financial: {
         revenue: { type: Number, default: 0 },
+        monthlyExpenses: { type: Number, default: 0 },
         burnRate: { type: Number, default: 0 },
         runwayMonths: { type: Number, default: 0 },
+        totalFunding: { type: Number, default: 0 },
         fundingAmount: { type: Number, default: 0 },
         fundingType: { type: String, enum: ['Equity', 'Debt', 'Grant', 'None'], default: 'None' },
         investorName: { type: String, default: '' }
@@ -50,6 +55,7 @@ const MetricsSchema = new Schema<IMetrics>({
         newUsers: { type: Number, default: 0 },
         cac: { type: Number, default: 0 },
         ltv: { type: Number, default: 0 },
+        churnRate: { type: Number, default: 0 },
         gmv: { type: Number, default: 0 },
         citiesServed: { type: Number, default: 0 }
     },
