@@ -5,6 +5,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { calculateVitalityScore } from '../services/vitalityScore';
 import { computeBenchmarks } from '../services/benchmarkAggregator';
 import { invalidateAllCaches } from '../services/forecasting';
+import { checkAndSendAlerts } from '../services/alertNotifier';
 
 const router = Router();
 
@@ -40,6 +41,9 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // Invalidate AI caches
         await invalidateAllCaches(profile._id);
+
+        // Check alert conditions and send email/SMS — fire-and-forget
+        checkAndSendAlerts(profile._id, period).catch(e => console.error('[Alerts]', e.message));
 
         res.status(201).json({ metrics, vitalityScore: scoreResult });
     } catch (error: any) {

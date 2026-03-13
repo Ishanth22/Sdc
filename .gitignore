@@ -44,3 +44,11 @@ pnpm-debug.log*
 # Resolved/temp doc files
 *.resolved
 *.txt.bak
+
+# Debug / test output files (may contain secrets)
+alert_test_result.json
+diag.json
+backend/*.json
+
+# Node modules
+node_modules/

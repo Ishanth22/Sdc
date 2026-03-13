@@ -17,6 +17,7 @@ import InvestorDashboard from './pages/InvestorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminStartupDetail from './pages/AdminStartupDetail';
 import AIRiskDashboard from './pages/AIRiskDashboard';
+import AlertSettings from './pages/AlertSettings';
 
 function AppRoutes() {
 
@@ -60,6 +61,9 @@ function AppRoutes() {
       } />
       <Route path="/ai-risk" element={
         <ProtectedRoute requiredRole="founder"><AIRiskDashboard /></ProtectedRoute>
+      } />
+      <Route path="/alert-settings" element={
+        <ProtectedRoute requiredRole="founder"><AlertSettings /></ProtectedRoute>
       } />
 
       {/* Investor Routes */}

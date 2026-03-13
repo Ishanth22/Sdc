@@ -40,6 +40,7 @@ const Navbar: React.FC = () => {
         { path: '/reports', label: 'Reports', icon: '📄' },
         { path: '/history', label: 'History', icon: '📉' },
         { path: '/plans', label: 'Plans', icon: '💎' },
+        { path: '/alert-settings', label: 'Alerts', icon: '🚨' },
         { path: '/profile', label: 'Profile', icon: '⚙️' },
     ];
 

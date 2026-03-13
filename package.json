@@ -2,5 +2,8 @@
   "dependencies": {
     "marked": "^17.0.4",
     "pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.17.5"
   }
 }
