@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NSPMS User Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #fff;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #312e81 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 56px 48px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: rgba(99,102,241,.25);
+    border: 1px solid #6366f1;
+    color: #a5b4fc;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    border: none; padding: 0; background: none;
+  }
+  .cover .subtitle {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+  .cred-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 28px;
+    text-align: left;
+  }
+  .cred-card {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .cred-card .role { font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .cred-card .email { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a5b4fc; font-weight: 500; }
+  .cred-card .startup { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .cred-card .pass { font-size: 11px; color: #4ade80; font-family: monospace; margin-top: 4px; }
+
+  /* ── HEADINGS ── */
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(90deg, #1e3a5f, #312e81);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 36px 0 18px;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    border-left: 4px solid #6366f1;
+    padding: 6px 0 6px 14px;
+    margin: 28px 0 12px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    margin: 20px 0 8px;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6366f1;
+    margin: 14px 0 6px;
+    page-break-after: avoid;
+  }
+
+  /* ── TEXT ── */
+  p { margin: 8px 0; }
+  strong { font-weight: 700; color: #0f172a; }
+  em { color: #475569; }
+  a { color: #6366f1; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #be123c;
+    white-space: nowrap;
+  }
+  pre {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    overflow-x: auto;
+    border-left: 3px solid #6366f1;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e2e8f0;
+    font-size: 11px;
+    white-space: pre;
+  }
+
+  /* ── LISTS ── */
+  ul, ol { padding-left: 24px; margin: 8px 0; }
+  li { margin: 4px 0; line-height: 1.65; }
+  li::marker { color: #6366f1; font-weight: 700; }
+  ul li { list-style-type: disc; }
+  ul li ul li { list-style-type: circle; }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  thead { background: linear-gradient(90deg, #1e3a5f, #312e81); color: #fff; }
+  thead th { padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eff6ff; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  td:first-child { font-weight: 500; }
+
+  /* ── BLOCKQUOTE ── */
+  blockquote {
+    border-left: 3px solid #6366f1;
+    background: #f8f7ff;
+    padding: 10px 16px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+    color: #475569;
+    font-style: italic;
+  }
+
+  /* ── HR ── */
+  hr {
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    margin: 28px 0;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    body { max-width: 100%; padding: 20px 28px; font-size: 11.5px; }
+    .cover { border-radius: 0; margin-bottom: 28px; padding: 36px 28px; }
+    h1 { font-size: 18px; }
+    h2 { font-size: 15px; }
+    h3 { font-size: 13px; }
+    pre { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+    h1, h2, h3, h4 { page-break-after: avoid; }
+    .no-break { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">Manual Testing Guide</div>
+  <h1>NSPMS User Guide</h1>
+  <p class="subtitle">National Startup Performance Monitoring System &nbsp;·&nbsp; 4 Personas · All 16 Features</p>
+
+  <div class="cred-grid">
+    <div class="cred-card">
+      <div class="role">🟢 Founder — Healthy</div>
+      <div class="email">founder1@nspms.in</div>
+      <div class="startup">NovaSaaS Technologies · SaaS · Series A</div>
+      <div class="pass">password: password123</div>
+    </div>
+    <div class="cred-card">
+      <div class="role">🔴 Founder — At-Risk</div>
+      <div class="email">founder2@nspms.in</div>
+      <div class="startup">MedQuick Health · Healthtech · Seed</div>
+      <div class="pass">password: password123</div>
+    </div>
+    <div class="cred-card">
+      <div class="role">💼 Investor</div>
+      <div class="email">investor@nspms.in</div>
+      <div class="startup">Full Investor Dashboard · Compare startups</div>
+      <div class="pass">password: password123</div>
+    </div>
+    <div class="cred-card">
+      <div class="role">🛡️ Admin</div>
+      <div class="email">admin@nspms.in</div>
+      <div class="startup">Admin Dashboard · Manage all users</div>
+      <div class="pass">password: password123</div>
+    </div>
+  </div>
+</div>
+
+<h1>NSPMS — Manual Testing User Guide</h1>
+<h2>4 Personas · Every Feature Covered</h2>
+<blockquote>
+<p>Open the app at <strong><a href="http://localhost:5173">http://localhost:5173</a></strong> · Backend runs at <strong><a href="http://localhost:5000">http://localhost:5000</a></strong></p>
+</blockquote>
+<hr>
+<h2>🔑 Credentials at a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Persona</th>
+<th>Email</th>
+<th>Password</th>
+<th>Role</th>
+<th>Startup</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>Arjun Mehta</strong></td>
+<td><code>founder1@nspms.in</code></td>
+<td><code>password123</code></td>
+<td>Founder</td>
+<td>NovaSaaS Technologies (SaaS / Series A)</td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Priya Nair</strong></td>
+<td><code>founder2@nspms.in</code></td>
+<td><code>password123</code></td>
+<td>Founder</td>
+<td>MedQuick Health (Healthtech / Seed)</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Rohit Sharma</strong></td>
+<td><code>investor@nspms.in</code></td>
+<td><code>password123</code></td>
+<td>Investor</td>
+<td>—</td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Sunita Das</strong></td>
+<td><code>admin@nspms.in</code></td>
+<td><code>password123</code></td>
+<td>Admin</td>
+<td>—</td>
+<td>Enterprise</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Feature Coverage Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th align="center">Persona 1 (Arjun)</th>
+<th align="center">Persona 2 (Priya)</th>
+<th align="center">Persona 3 (Rohit)</th>
+<th align="center">Persona 4 (Sunita)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login / Logout</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>Register (signup)</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Account Lock (5 wrong passwords)</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Startup Profile</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Dashboard (healthy)</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Dashboard (at-risk + alerts)</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Submit New Metrics</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Metrics History &amp; Audit</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Vitality Score / Health Score</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Smart Alerts (dismiss)</td>
+<td align="center">✅</td>
+<td align="center">✅ 🔴 Critical</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>AI Forecasting</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>AI Risk + Benchmarking</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>AI Advisor (chatbot)</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Milestones (completed)</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Milestones (overdue, OKRs)</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Custom KPI Builder</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Scenario Simulation</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Reports &amp; CSV Export</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Plans / Subscription page</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Investor Dashboard</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Investor Compare (2 startups)</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+<td align="center">—</td>
+</tr>
+<tr>
+<td>Admin Dashboard</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>Admin Startup Detail</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>Admin Change Subscription</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">✅</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>🟢 Persona 1 — Arjun Mehta (Healthy Founder)</h2>
+<p><strong>Email:</strong> <code>founder1@nspms.in</code> | <strong>Password:</strong> <code>password123</code><br><strong>Startup:</strong> NovaSaaS Technologies | SaaS · Series A · Bengaluru · 45 employees<br><strong>Mock Data:</strong> 8 months of metrics (Aug 2024 → Mar 2025), ₹8Cr total funding</p>
+<h3>Step-by-Step Walkthrough</h3>
+<h4>1. Login</h4>
+<ol>
+<li>Go to <code>http://localhost:5173</code></li>
+<li>Enter <code>founder1@nspms.in</code> / <code>password123</code> → click <strong>Login</strong></li>
+<li>✅ Redirected to <code>/dashboard</code></li>
+</ol>
+<blockquote>
+<p><strong>Test Account Lock:</strong> Enter wrong password 5 times → see the lockout error. Wait 15 min or run <code>npm run seed</code> to unlock.</p>
+</blockquote>
+<h4>2. Dashboard (<code>/dashboard</code>)</h4>
+<ul>
+<li><strong>Vitality Score Gauge</strong> — should show ~82–88/100 (green)</li>
+<li><strong>Risk Badge</strong> — <strong>Low</strong> 🟢</li>
+<li><strong>Funding Readiness</strong> — &gt;80%</li>
+<li><strong>KPI Cards:</strong> Revenue ₹6.48L, Burn ₹0 (profitable), Runway 26 months, Users 3,350, Churn 3.1%, LTV/CAC 18.7x</li>
+<li><strong>5 Charts:</strong> Revenue Growth (upward trend), User Growth (bar chart), Revenue vs Expenses (converging), Burn Rate Trend, Expense Distribution (pie)</li>
+<li><strong>Benchmark bar:</strong> Compare NovaSaaS vs industry averages <em>(should be well above)</em></li>
+<li><strong>Alerts panel:</strong> Should show 0 critical alerts (healthy startup)</li>
+</ul>
+<h4>3. Submit Metrics (<code>/metrics/new</code>)</h4>
+<ol>
+<li>Click <strong>&quot;+ Submit Metrics&quot;</strong> in the nav</li>
+<li>Select period → e.g., <code>2025-04</code></li>
+<li>Fill Financial: Revenue <code>720000</code>, Expenses <code>535000</code>, Burn <code>0</code>, Runway <code>28</code>, Funding <code>8000000</code></li>
+<li>Fill Operational: Active Users <code>3800</code>, New Users <code>780</code>, CAC <code>890</code>, LTV <code>17800</code>, Churn <code>2.9</code>, GMV <code>2160000</code>, Cities <code>14</code></li>
+<li>Fill Innovation: Patents Filed <code>5</code>, Granted <code>2</code>, Trademarks <code>4</code>, R&amp;D <code>118000</code></li>
+<li>Fill Impact: Direct Jobs <code>48</code>, Women <code>19</code>, Rural <code>8</code>, Exports <code>650000</code></li>
+<li>Click <strong>Submit</strong></li>
+<li>✅ Redirected to Dashboard — charts update with new month, new vitality score computed</li>
+</ol>
+<h4>4. Metrics History &amp; Audit Trail (<code>/history</code>)</h4>
+<ul>
+<li>Table shows all 8+ submitted periods in reverse order</li>
+<li>Each row: Period, Revenue, Burn, Runway, Users, Churn, CAC, LTV/CAC, Health Score</li>
+<li><strong>Audit Log tab</strong> — see log of all actions (metrics submitted, profile saved, alerts dismissed)</li>
+</ul>
+<h4>5. Startup Profile (<code>/profile</code>)</h4>
+<ol>
+<li>Click profile icon or nav → <strong>Profile</strong></li>
+<li>See pre-filled: NovaSaaS Technologies, SaaS, Series A, Bengaluru, 45 employees</li>
+<li>Edit Company Description → save → ✅ Profile updated toast</li>
+<li>Edit Twitter/LinkedIn links → save</li>
+</ol>
+<h4>6. Milestones &amp; OKRs (<code>/milestones</code>)</h4>
+<ol>
+<li>View <strong>All</strong> tab — 9 milestones shown</li>
+<li>Click <strong>Milestones Only</strong> — 5 simple milestones, 5 with ✅ Completed badge</li>
+<li>Click <strong>OKRs Only</strong> — 3 OKRs with Key Results and progress bars</li>
+<li><strong>Add a new milestone:</strong><ul>
+<li>Click <strong>+ Add Milestone</strong></li>
+<li>Title: <code>Launch API Marketplace</code>, Category: <code>Product</code>, Deadline: <code>2025-06-30</code>, Description: any text</li>
+<li>Toggle <strong>OKR mode</strong> → add Key Result: <code>API Partners</code>, Target <code>20</code>, Unit <code>partners</code></li>
+<li>Save → appears in the list</li>
+</ul>
+</li>
+<li><strong>Update progress:</strong> drag the completion slider on any in-progress milestone</li>
+<li><strong>Mark complete:</strong> click <strong>✓ Complete</strong> on the new milestone → timestamp shown</li>
+<li><strong>Overall progress bar</strong> at top updates automatically</li>
+</ol>
+<h4>7. Custom KPI Builder (<code>/custom-kpis</code>)</h4>
+<ol>
+<li>See 4 pre-built KPIs: LTV/CAC, Revenue per Employee, Burn Multiple, NRR</li>
+<li>Each shows a line chart trending across 8 months</li>
+<li><strong>Add a new KPI:</strong><ul>
+<li>Click <strong>+ Add KPI</strong></li>
+<li>Name: <code>GMV per City</code>, Formula: <code>gmv / citiesServed</code>, Unit: <code>₹</code>, Description: any</li>
+<li>Save → card with empty chart appears</li>
+</ul>
+</li>
+<li><strong>Log a value for a period:</strong><ul>
+<li>Click <strong>+ Log Value</strong> on the new KPI</li>
+<li>Period: <code>2025-03</code>, Value: <code>154615</code></li>
+<li>Save → chart updates</li>
+</ul>
+</li>
+</ol>
+<h4>8. AI Forecasting (<code>/forecasting</code>)</h4>
+<ol>
+<li>Navigate to <strong>Forecasting</strong></li>
+<li>Wait for AI to compute (first visit ~5–10 seconds with OpenRouter key)</li>
+<li>See 🤖 <strong>AI-Enhanced</strong> badge + cache timestamp</li>
+<li><strong>4 charts:</strong> Revenue Forecast, Expense Forecast, User Growth, Runway Projection<ul>
+<li>Solid lines = historical actual data (Aug 2024 → Mar 2025)</li>
+<li>Dashed lines = AI predictions (Apr → Sep 2025)</li>
+</ul>
+</li>
+<li><strong>AI Insights panel</strong> — 5 bullet points of AI analysis</li>
+<li><strong>Strategic Outlook</strong> — 2–3 sentence narrative</li>
+<li><strong>Critical Action</strong> — single most important 30-day action</li>
+<li><strong>Confidence level</strong> badge (should be <code>high</code> with 8 months of data)</li>
+<li>Submit new metrics → revisit Forecasting → AI regenerates (cache invalidated)</li>
+</ol>
+<h4>9. AI Intelligence Center (<code>/ai-risk</code>)</h4>
+<p><strong>Tab 1 — Risk Prediction:</strong></p>
+<ol>
+<li>AI Risk Score displayed (~25–35 for NovaSaaS — Low risk)</li>
+<li><strong>Trend Analysis</strong> paragraph</li>
+<li><strong>Risk Predictions grid</strong> — 6 cards with probability, timeframe, impact</li>
+<li><strong>AI Recommended Actions</strong> — numbered list</li>
+<li>Click <strong>🔄 Re-analyze</strong> button → forces fresh AI call (bypasses cache)</li>
+</ol>
+<p><strong>Tab 2 — AI Benchmarking:</strong></p>
+<ol>
+<li><strong>Competitive Position</strong> — should show &quot;Top Quartile&quot; or &quot;Above Average&quot;</li>
+<li><strong>Peer Comparison</strong> summary sentence</li>
+<li><strong>Strength Areas</strong> — metrics where NovaSaaS leads peers (green badges with + %)</li>
+<li><strong>Areas to Improve</strong> — red badges with - %</li>
+<li><strong>Competitive Edge</strong> narrative</li>
+<li><strong>AI-Detected Opportunities</strong></li>
+</ol>
+<h4>10. AI Advisor (<code>/advisor</code>)</h4>
+<ol>
+<li><strong>Auto-recommendations panel</strong> loads on page open (5 pre-generated cards)</li>
+<li>Type a custom question: <code>&quot;When should we start our Series B fundraise?&quot;</code></li>
+<li>Press <strong>Send</strong> → AI responds with data-grounded answer citing actual numbers</li>
+<li>Ask follow-up: <code>&quot;What is our biggest operational risk right now?&quot;</code></li>
+<li>Ask: <code>&quot;How do we reduce CAC from ₹920 to ₹700?&quot;</code></li>
+<li><strong>Data Points Used</strong> chips appear below each AI answer</li>
+</ol>
+<h4>11. Scenario Simulation (<code>/simulation</code>)</h4>
+<ol>
+<li><strong>Sliders:</strong> Revenue Change <code>+30%</code>, Expense Reduction <code>10%</code>, Additional Funding <code>₹50L</code>, Churn Improvement <code>20%</code></li>
+<li>Click <strong>🔬 Run Simulation</strong></li>
+<li><strong>Radar Chart</strong> — amber shape (simulated) vs gray (current) — revenue and runway axes should expand</li>
+<li><strong>Comparison Table</strong> — Current vs Simulated vs Change for all 6 metrics</li>
+<li>Try extreme: Revenue <code>−40%</code> → see health score drop sharply → Risk Level changes to High/Critical</li>
+</ol>
+<h4>12. Reports &amp; Export (<code>/reports</code>)</h4>
+<ol>
+<li>Click <strong>Performance Summary Report</strong> card → report generates in-browser</li>
+<li>See: company header, health score, latest KPIs, all historical metrics table, milestones, alerts</li>
+<li>Click <strong>🖨️ Print / Save as PDF</strong> → browser print dialog opens; save as PDF</li>
+<li>Click <strong>📄 Export CSV</strong> → <code>.csv</code> file downloads with all metrics history (open in Excel)</li>
+</ol>
+<h4>13. Logout</h4>
+<ul>
+<li>Click user avatar → <strong>Logout</strong> → redirected to <code>/login</code></li>
+</ul>
+<hr>
+<h2>🔴 Persona 2 — Priya Nair (At-Risk Founder)</h2>
+<p><strong>Email:</strong> <code>founder2@nspms.in</code> | <strong>Password:</strong> <code>password123</code><br><strong>Startup:</strong> MedQuick Health | Healthtech · Seed · Chennai · 12 employees<br><strong>Mock Data:</strong> 6 months of declining metrics, 2-month runway, 21% churn</p>
+<h3>Step-by-Step Walkthrough</h3>
+<h4>1. Register as a New User (Test Signup Flow)</h4>
+<blockquote>
+<p><em>This tests the registration feature. You can either register a brand-new account OR log in directly with <a href="mailto:founder2@nspms.in">founder2@nspms.in</a>.</em></p>
+</blockquote>
+<p><strong>To test Registration:</strong></p>
+<ol>
+<li>On Login page, click <strong>&quot;Register&quot;</strong> or <strong>&quot;Sign Up&quot;</strong> toggle</li>
+<li>Fill: Name <code>Test Founder</code>, Email <code>testfounder@nspms.in</code>, Password <code>password123</code></li>
+<li>Company Name: <code>TestCo</code>, Sector: <code>Fintech</code>, Stage: <code>Idea</code>, City: <code>Mumbai</code></li>
+<li>Click <strong>Register</strong> → ✅ auto-logged in, redirected to Dashboard (empty, no data yet)</li>
+<li>Logout and log back in as <code>founder2@nspms.in</code> to see the pre-seeded at-risk data</li>
+</ol>
+<h4>2. Login as Priya</h4>
+<ol>
+<li>Email <code>founder2@nspms.in</code> / <code>password123</code> → Login</li>
+<li>✅ Dashboard loads immediately</li>
+</ol>
+<h4>3. Dashboard — At-Risk View (<code>/dashboard</code>)</h4>
+<ul>
+<li><strong>Vitality Score</strong> — ~18–28/100 (red/critical)</li>
+<li><strong>Risk Badge</strong> — <strong>Critical</strong> 🔴</li>
+<li><strong>Funding Readiness</strong> — &lt;20%</li>
+<li><strong>KPI Cards:</strong> Revenue ₹58K (low), Burn ₹1.87L/mo, Runway <strong>2 months</strong> 🚨, Users 270, Churn <strong>21%</strong> 🚨, LTV/CAC <strong>0.86x</strong> 🚨</li>
+<li><strong>Smart Alerts Panel</strong> — should show 3–4 critical/warning alerts:<ul>
+<li>🚨 Critically Low Runway (2 months)</li>
+<li>🚨 High Churn Rate (21%)</li>
+<li>🚨 Unhealthy LTV/CAC Ratio (&lt;1x)</li>
+<li>⚠️ Revenue Decline (&gt;20% drop)</li>
+</ul>
+</li>
+<li><strong>Dismiss an alert:</strong> click ✕ on one → alert disappears → refresh to confirm it&#39;s gone</li>
+<li><strong>Revenue vs Expenses chart</strong> — expenses dwarf revenue (large gap visible)</li>
+<li><strong>Benchmark comparison</strong> — shows MedQuick well below Healthtech/Seed industry averages</li>
+</ul>
+<h4>4. Milestones — Overdue View (<code>/milestones</code>)</h4>
+<ol>
+<li>All tab: 7 milestones</li>
+<li><strong>Overdue items</strong> highlighted in red — deadlines past but not completed:<ul>
+<li>&quot;Onboard 500 Active Patients&quot; (due Dec 2024) — 70%</li>
+<li>&quot;Integrate 10 Specialist Doctors&quot; (due Nov 2024) — 40%</li>
+<li>&quot;Telemedicine License&quot; (due Dec 2024) — 55%</li>
+<li>&quot;Series Seed Fundraise&quot; (due Feb 2025) — 20%</li>
+<li>&quot;Hire Head of Medical Operations&quot; (due Jan 2025) — 0%</li>
+</ul>
+</li>
+<li><strong>OKRs Only</strong> tab: see 2 OKRs — &quot;Reduce Churn&quot; OKR shows current 21% vs target 10%</li>
+<li>Update the &quot;Reduce Churn&quot; OKR key result slider — drag to a new value → saves</li>
+</ol>
+<h4>5. Plans Page (<code>/plans</code>)</h4>
+<blockquote>
+<p><em>Priya is on the Free plan — the Plans page shows upgrade options</em></p>
+</blockquote>
+<ol>
+<li>Navigate to <code>/plans</code> (subscription page)</li>
+<li>See <strong>current plan: Free</strong> highlighted</li>
+<li>See Pro plan features listed (Forecasting, AI Advisor, Reports)</li>
+<li>See Enterprise plan features (Simulation, Custom KPIs, Benchmarking)</li>
+<li><em>(Plan change is done by Admin — Priya can see but Admin upgrades it)</em></li>
+</ol>
+<h4>6. Submit Metrics (Add Another Month)</h4>
+<ol>
+<li>Go to <code>/metrics/new</code></li>
+<li>Submit <code>2025-04</code> metrics — use even more dire numbers (Runway <code>1</code>, Churn <code>23%</code>) to trigger more alerts</li>
+<li>✅ New alerts generated — dashboard re-renders with fresh critical score</li>
+</ol>
+<h4>7. Custom KPIs (<code>/custom-kpis</code>)</h4>
+<ol>
+<li>See 3 pre-built KPIs: LTV/CAC, Consultation Completion Rate, Doctor Utilization Rate</li>
+<li>All 3 show downward trending line charts (declining health)</li>
+<li>Add a new KPI: <code>Patient Repeat Rate</code>, Formula: <code>repeat_visits / total_visits</code>, Unit: <code>%</code></li>
+<li>Log value for <code>2025-03</code>: <code>34</code></li>
+</ol>
+<h4>8. Metrics History (<code>/history</code>)</h4>
+<ol>
+<li>See 6 months of data showing declining revenue, rising burn, shrinking runway</li>
+<li>Audit log shows all metric submission entries</li>
+</ol>
+<hr>
+<h2>💼 Persona 3 — Rohit Sharma (Investor)</h2>
+<p><strong>Email:</strong> <code>investor@nspms.in</code> | <strong>Password:</strong> <code>password123</code></p>
+<h3>Step-by-Step Walkthrough</h3>
+<h4>1. Login</h4>
+<ol>
+<li>Email <code>investor@nspms.in</code> / <code>password123</code> → Login</li>
+<li>✅ Redirected to <code>/investor</code> (Investor Dashboard)</li>
+<li><em>Trying to visit <code>/dashboard</code> directly → redirected back (role-protected)</em></li>
+</ol>
+<h4>2. Investor Dashboard (<code>/investor</code>)</h4>
+<ul>
+<li><strong>Startup Cards:</strong> See both <strong>NovaSaaS Technologies</strong> and <strong>MedQuick Health</strong></li>
+<li>Each card shows: Health Score, Revenue, Active Users, Runway, Revenue Growth %, Risk Badge, Funding Readiness bar</li>
+</ul>
+<h4>3. Search &amp; Filter</h4>
+<ol>
+<li><strong>Search box:</strong> Type <code>Nova</code> → only NovaSaaS shows</li>
+<li>Clear → Type <code>Med</code> → only MedQuick shows</li>
+<li><strong>Filter by Sector:</strong> Select <code>SaaS</code> → only NovaSaaS</li>
+<li><strong>Filter by Stage:</strong> Select <code>Seed</code> → only MedQuick</li>
+<li>Clear all filters → both appear</li>
+</ol>
+<h4>4. Sort Startups</h4>
+<ol>
+<li><strong>Sort by Health Score</strong> → NovaSaaS (82+) appears before MedQuick (22)</li>
+<li><strong>Sort by Revenue</strong> → NovaSaaS first (₹6.48L vs ₹58K)</li>
+<li><strong>Sort by Funding Readiness</strong> → NovaSaaS first</li>
+</ol>
+<h4>5. Side-by-Side Comparison (Key Feature!)</h4>
+<ol>
+<li>Click <strong>NovaSaaS Technologies</strong> card → blue ring appears (selected)</li>
+<li>Click <strong>MedQuick Health</strong> card → second blue ring</li>
+<li>Click <strong>⚖️ Compare Selected</strong> button</li>
+<li><strong>Comparison panel opens:</strong><ul>
+<li>Side-by-side: Health Score (82 vs 22), Revenue (₹6.48L vs ₹58K), Users (3350 vs 270), Runway (26mo vs 2mo), Burn (₹0 vs ₹1.87L), Churn (3.1% vs 21%), Team (45 vs 12), City (Bengaluru vs Chennai)</li>
+<li><strong>Radar Chart:</strong> Two overlapping spider charts (indigo = NovaSaaS, violet = MedQuick) across 5 dimensions</li>
+</ul>
+</li>
+<li>Close panel → deselect cards</li>
+</ol>
+<hr>
+<h2>🛡️ Persona 4 — Sunita Das (Admin)</h2>
+<p><strong>Email:</strong> <code>admin@nspms.in</code> | <strong>Password:</strong> <code>password123</code></p>
+<h3>Step-by-Step Walkthrough</h3>
+<h4>1. Login</h4>
+<ol>
+<li>Email <code>admin@nspms.in</code> / <code>password123</code> → Login</li>
+<li>✅ Redirected to <code>/admin</code> (Admin Dashboard)</li>
+<li><em>Trying <code>/dashboard</code> or <code>/investor</code> → role-protected, redirected</em></li>
+</ol>
+<h4>2. Admin Dashboard (<code>/admin</code>)</h4>
+<p><strong>Platform Overview Stats:</strong></p>
+<ul>
+<li>Total Startups: 2 (NovaSaaS + MedQuick)</li>
+<li>Total Registered Users: 4</li>
+<li>Average Health Score: ~52 (average of 82 and 22)</li>
+<li>Platform Revenue: aggregated</li>
+</ul>
+<p><strong>Startup List:</strong></p>
+<ul>
+<li>Both startups listed with health scores, risk badges, last activity date</li>
+</ul>
+<p><strong>User List:</strong></p>
+<ul>
+<li>All 4 users: Arjun Mehta (founder), Priya Nair (founder), Rohit Sharma (investor), Sunita Das (admin)</li>
+</ul>
+<h4>3. Startup Detail — Click-Through (<code>/admin/startup/:id</code>)</h4>
+<ol>
+<li>Click on <strong>NovaSaaS Technologies</strong> row</li>
+<li>Full detail page:<ul>
+<li>Startup Profile: company info, sector, stage, team size, CIN</li>
+<li>Health Score + all 5 component breakdowns</li>
+<li>All metrics (latest period shown)</li>
+<li>All milestones list</li>
+</ul>
+</li>
+<li>Go back → click <strong>MedQuick Health</strong></li>
+<li>See critical health score, 2-month runway, high churn — critical risk</li>
+</ol>
+<h4>4. Change Subscription Plan</h4>
+<ol>
+<li>On the Admin Dashboard, find <strong>Priya Nair</strong> or <strong>MedQuick Health</strong></li>
+<li>Click the plan selector → change from <strong>Free</strong> → <strong>Pro</strong></li>
+<li>✅ Plan updated — Priya can now access Forecasting, AI Advisor, Reports</li>
+<li>Change NovaSaaS from <strong>Enterprise</strong> → <strong>Pro</strong> → change back to <strong>Enterprise</strong></li>
+</ol>
+<hr>
+<h2>📝 Additional Edge Cases to Test</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>How to Trigger</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Account lockout</strong></td>
+<td>Enter wrong password 5× on any account</td>
+</tr>
+<tr>
+<td><strong>Auto-unlock</strong></td>
+<td>Wait 15 minutes OR run <code>npm run seed</code> in <code>/backend</code></td>
+</tr>
+<tr>
+<td><strong>Cache invalidation</strong></td>
+<td>Submit new metrics → visit <code>/forecasting</code> → new AI call made</td>
+</tr>
+<tr>
+<td><strong>AI fallback mode</strong></td>
+<td>Remove OpenRouter key from <code>.env</code>, restart backend → Forecasting still works (rule-based)</td>
+</tr>
+<tr>
+<td><strong>Simulation extremes</strong></td>
+<td>Set Revenue Change to -50% → watch health score hit 0</td>
+</tr>
+<tr>
+<td><strong>Empty state</strong></td>
+<td>Register a brand new account → all pages show &quot;no data&quot; empty states</td>
+</tr>
+<tr>
+<td><strong>OKR slider</strong></td>
+<td>On any OKR&#39;s key result, drag the current value slider → auto-saves</td>
+</tr>
+<tr>
+<td><strong>Report PDF</strong></td>
+<td>Open Reports → click Print → choose &quot;Save as PDF&quot; in print dialog</td>
+</tr>
+<tr>
+<td><strong>CSV Export</strong></td>
+<td>Click Export CSV on Reports page → open the <code>.csv</code> in Excel</td>
+</tr>
+<tr>
+<td><strong>Alert dismiss</strong></td>
+<td>On Priya&#39;s dashboard, click ✕ on a critical alert → confirm it disappears</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>🚀 Quick Start Checklist</h2>
+<pre><code>1. Make sure servers are running:
+   → Backend:  npm run dev  (in /backend)  → http://localhost:5000
+   → Frontend: npm run dev  (in /frontend) → http://localhost:5173
+
+2. Login order for full coverage:
+   → founder1@nspms.in   (healthy founder — test all founder features)
+   → founder2@nspms.in   (at-risk founder — test alerts, overdue milestones)
+   → investor@nspms.in   (investor — test comparison feature)
+   → admin@nspms.in      (admin — test startup management)
+
+3. All passwords: password123
+</code></pre>
+
+
+</body>
+</html>

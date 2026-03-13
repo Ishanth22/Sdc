@@ -8,7 +8,7 @@ import { invalidateAllCaches } from '../services/forecasting';
 
 const router = Router();
 
-// POST /api/metrics – submit metrics for current period
+// POST /api/metrics – submit or update metrics for a period
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -16,37 +16,29 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Startup profile not found. Create one first.' });
         }
 
-        // Use provided period or auto-generate current month
         const now = new Date();
         const period = req.body.period || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-        const metricsData = {
+        // Delete existing entry for this period then re-insert fresh
+        // This guarantees all nested fields (financial, operational, etc.) are fully replaced
+        await Metrics.deleteOne({ startupId: profile._id, period });
+
+        const metrics = await Metrics.create({
             startupId: profile._id,
             period,
-            financial: req.body.financial || {},
+            financial:   req.body.financial   || {},
             operational: req.body.operational || {},
-            innovation: req.body.innovation || {},
-            impact: req.body.impact || {}
-        };
+            innovation:  req.body.innovation  || {},
+            impact:      req.body.impact      || {}
+        });
 
-        // Upsert metrics for this period
-        const metrics = await Metrics.findOneAndUpdate(
-            { startupId: profile._id, period },
-            metricsData,
-            { upsert: true, new: true, runValidators: true }
-        );
+        // Recompute benchmarks
+        try { await computeBenchmarks(period); } catch (_) {}
 
-        // Recompute benchmarks for this period
-        try {
-            await computeBenchmarks(period);
-        } catch (e) {
-            // Non-blocking; benchmarks may not exist yet
-        }
-
-        // Recalculate vitality score
+        // Recalculate vitality score + alerts
         const scoreResult = await calculateVitalityScore(profile._id, period);
 
-        // Invalidate ALL analysis caches — data changed, next page visit will regenerate
+        // Invalidate AI caches
         await invalidateAllCaches(profile._id);
 
         res.status(201).json({ metrics, vitalityScore: scoreResult });
@@ -73,6 +65,19 @@ router.get('/history', authenticate, async (req: AuthRequest, res: Response) => 
 
         const metrics = await Metrics.find(query).sort({ period: -1 });
         res.json(metrics);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/metrics/period/:period – fetch metrics for a specific period
+router.get('/period/:period', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const profile = await StartupProfile.findOne({ userId: req.user!._id });
+        if (!profile) return res.status(404).json({ error: 'Startup profile not found' });
+
+        const metrics = await Metrics.findOne({ startupId: profile._id, period: req.params.period });
+        res.json(metrics || null);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

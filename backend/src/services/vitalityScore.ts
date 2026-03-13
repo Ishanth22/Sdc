@@ -168,12 +168,9 @@ export async function calculateVitalityScore(
 
     const finalScore = Math.min(100, Math.max(0, score));
 
-    // Upsert the score
-    await VitalityScore.findOneAndUpdate(
-        { startupId, period },
-        { score: finalScore, components, riskFlags, createdAt: new Date() },
-        { upsert: true, new: true }
-    );
+    // Delete existing score for this period and re-insert fresh
+    await VitalityScore.deleteOne({ startupId, period });
+    await VitalityScore.create({ startupId, period, score: finalScore, components, riskFlags });
 
     // Generate alerts
     await generateAlerts(startupId, period, riskFlags, riskLevel, metrics, prevMetrics);

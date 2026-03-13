@@ -13,7 +13,7 @@ import StartupProfile from './models/StartupProfile';
 import Organization from './models/Organization';
 import Subscription from './models/Subscription';
 
-const MONGO_URI = process.env.MONGO_URI || '';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://lmelvindenish_db_user:melvindenish@cluster0.t5hb9cw.mongodb.net/nspms?appName=Cluster0';
 
 async function seed() {
     console.log('🌱 Connecting to MongoDB...');

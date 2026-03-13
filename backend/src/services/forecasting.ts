@@ -849,97 +849,243 @@ function computeGrowthRate(values: number[]): number {
     return rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
 }
 
-// ─── SCENARIO SIMULATION ──────────────────────────────────────────────
+
+// ─── SCENARIO SIMULATION ENGINE ────────────────────────────────────────
+
+export interface ScenarioInput {
+    scenarioType: 'hire' | 'marketing' | 'funding' | 'expansion' | 'custom';
+    // Hire employees
+    numEmployees?: number;
+    avgMonthlySalary?: number;
+    // Marketing
+    extraMarketingBudget?: number;
+    expectedUserGrowthPercent?: number;
+    // Funding
+    fundingAmount?: number;
+    // Expansion
+    numCities?: number;
+    setupCostPerCity?: number;
+    revenuePerCityPerMonth?: number;
+    // Custom (legacy)
+    revenueChangePercent?: number;
+    expenseChangePercent?: number;
+    additionalFunding?: number;
+    churnChangePercent?: number;
+}
+
+function projectMonths(
+    base: { revenue: number; expenses: number; cash: number; users: number; churn: number },
+    monthlyDeltas: Array<{ revDelta: number; expDelta: number; cashDelta: number; userDelta: number }>,
+    months = 12
+): Array<{ month: number; revenue: number; expenses: number; burnRate: number; runway: number; users: number; profit: number }> {
+    const result = [];
+    let rev = base.revenue, exp = base.expenses, cash = base.cash, users = base.users;
+
+    for (let i = 0; i < months; i++) {
+        const d = monthlyDeltas[i] || monthlyDeltas[monthlyDeltas.length - 1];
+        rev  = Math.max(0, rev  + d.revDelta);
+        exp  = Math.max(0, exp  + d.expDelta);
+        cash = Math.max(0, cash + d.cashDelta + rev - exp);
+        users = Math.max(0, users + d.userDelta);
+        const burnRate = Math.max(0, exp - rev);
+        const runway = burnRate > 0 ? Math.round(cash / burnRate) : (cash > 0 ? 999 : 0);
+        result.push({ month: i + 1, revenue: Math.round(rev), expenses: Math.round(exp), burnRate: Math.round(burnRate), runway, users: Math.round(users), profit: Math.round(rev - exp) });
+    }
+    return result;
+}
 
 export async function simulateScenario(
     startupId: mongoose.Types.ObjectId | string,
-    adjustments: {
-        revenueChangePercent?: number;
-        expenseChangePercent?: number;
-        additionalFunding?: number;
-        churnChangePercent?: number;
-    }
+    input: ScenarioInput
 ): Promise<{
+    scenario: string;
+    summary: string;
     current: any;
     simulated: any;
-    comparison: { metric: string; current: number; simulated: number; change: string }[];
+    monthlyProjection: any[];
+    comparison: { metric: string; current: number | string; simulated: number | string; change: string; better: boolean }[];
+    insights: string[];
+    breakEvenMonth: number | null;
+    riskDelta: number;
 }> {
     const latest = await Metrics.findOne({ startupId }).sort({ period: -1 });
-    if (!latest) throw new Error('No metrics found');
+    if (!latest) throw new Error('No metrics found. Submit at least one month of metrics first.');
 
-    const {
-        revenueChangePercent = 0,
-        expenseChangePercent = 0,
-        additionalFunding = 0,
-        churnChangePercent = 0
-    } = adjustments;
+    const curRevenue  = latest.financial.revenue || 0;
+    const curExp      = latest.financial.monthlyExpenses || latest.financial.burnRate || 0;
+    const curBurn     = Math.max(0, curExp - curRevenue);
+    const curCash     = latest.financial.cashOnHand || (latest.financial.runwayMonths * curBurn) || 0;
+    const curRunway   = curBurn > 0 ? Math.round(curCash / curBurn) : (curCash > 0 ? 999 : 0);
+    const curChurn    = latest.operational.churnRate || 0;
+    const curUsers    = latest.operational.activeUsers || 0;
+    const curCAC      = latest.operational.cac || 1000;
+    const arpu        = curUsers > 0 ? curRevenue / curUsers : 0;
 
-    const curRevenue = latest.financial.revenue;
-    const curExpenses = latest.financial.monthlyExpenses || latest.financial.burnRate;
-    const curBurnRate = latest.financial.burnRate;
-    const curRunway = latest.financial.runwayMonths;
-    const curChurn = latest.operational.churnRate || 0;
-    const curUsers = latest.operational.activeUsers;
-    const totalFunding = (latest.financial.totalFunding || 0) + additionalFunding;
+    const base = { revenue: curRevenue, expenses: curExp, cash: curCash, users: curUsers, churn: curChurn };
 
-    const simRevenue = curRevenue * (1 + revenueChangePercent / 100);
-    const simExpenses = curExpenses * (1 - expenseChangePercent / 100);
-    const simBurnRate = Math.max(0, simExpenses - simRevenue);
-    const simRunway = simBurnRate > 0 ? Math.round(totalFunding / simBurnRate) : 999;
-    const simChurn = Math.max(0, curChurn * (1 - churnChangePercent / 100));
-    const simUsers = curUsers * (1 + (churnChangePercent > 0 ? churnChangePercent / 200 : 0));
+    // Risk score helper
+    const riskScore = (burn: number, runway: number, churn: number) => {
+        let s = 0;
+        if (runway < 3)  s += 40; else if (runway < 6) s += 25; else if (runway < 12) s += 10;
+        if (burn > curRevenue * 2) s += 20; else if (burn > curRevenue) s += 10;
+        if (churn > 15) s += 20; else if (churn > 8) s += 10;
+        return Math.min(100, s);
+    };
 
-    let simScore = 50;
-    const revGrowth = revenueChangePercent;
-    if (revGrowth > 20) simScore += 15;
-    else if (revGrowth > 5) simScore += 10;
-    else if (revGrowth < -5) simScore -= 10;
+    let monthlyDeltas: Array<{ revDelta: number; expDelta: number; cashDelta: number; userDelta: number }> = [];
+    let scenarioLabel = '';
+    let summary = '';
 
-    if (simRunway > 18) simScore += 15;
-    else if (simRunway > 12) simScore += 10;
-    else if (simRunway < 6) simScore -= 15;
+    // ── 1. HIRE EMPLOYEES ──────────────────────────────────────────────
+    if (input.scenarioType === 'hire') {
+        const n       = input.numEmployees || 5;
+        const salary  = input.avgMonthlySalary || 60000;
+        const overhead = 0.25; // PF + insurance + equipment
+        const monthlyCost = n * salary * (1 + overhead);
+        // Revenue ramp: each employee contributes ~0.5x salary in revenue after 3-month ramp
+        const revenuePerEmpAtFullRamp = salary * 0.5;
+        scenarioLabel = `Hire ${n} Employee${n > 1 ? 's' : ''}`;
+        summary = `Adding ${n} employees at ₹${(salary/1000).toFixed(0)}K/mo avg salary (+25% overhead). Revenue ramp-up takes 3 months.`;
 
-    if (simBurnRate < curBurnRate) simScore += 10;
-    if (simChurn < 5) simScore += 10;
-    else if (simChurn > 15) simScore -= 10;
+        monthlyDeltas = Array.from({ length: 12 }, (_, i) => {
+            const rampFactor = i < 1 ? 0 : i < 2 ? 0.2 : i < 3 ? 0.5 : 1.0;
+            return {
+                revDelta: (revenuePerEmpAtFullRamp * n * rampFactor) / 12,
+                expDelta: i === 0 ? monthlyCost : 0, // one-time step-up
+                cashDelta: 0,
+                userDelta: Math.round(n * rampFactor * 2) // support staff helps retention
+            };
+        });
+    }
 
-    simScore = Math.max(0, Math.min(100, simScore));
+    // ── 2. MARKETING CAMPAIGN ──────────────────────────────────────────
+    else if (input.scenarioType === 'marketing') {
+        const budget  = input.extraMarketingBudget || 200000;
+        const growthP = (input.expectedUserGrowthPercent || 20) / 100;
+        const newUsersPerMonth = Math.round((budget / curCAC) * 0.7); // 70% efficiency
+        scenarioLabel = 'Increase Marketing Budget';
+        summary = `Extra ₹${(budget/100000).toFixed(1)}L/month in marketing. Estimated ~${newUsersPerMonth} new users/month starting month 2.`;
 
-    let curScore = 50;
-    if (curRunway > 18) curScore += 15;
-    else if (curRunway > 12) curScore += 10;
-    else if (curRunway < 6) curScore -= 15;
-    if (curChurn < 5) curScore += 10;
-    else if (curChurn > 15) curScore -= 10;
-    curScore = Math.max(0, Math.min(100, curScore));
+        monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
+            revDelta: i < 2 ? 0 : newUsersPerMonth * arpu * 0.6, // 2-month lag
+            expDelta: i === 0 ? budget : 0,
+            cashDelta: 0,
+            userDelta: i < 1 ? 0 : newUsersPerMonth
+        }));
+    }
 
-    const simRiskFlags: string[] = [];
-    if (simRunway < 6) simRiskFlags.push('Low runway');
-    if (simChurn > 20) simRiskFlags.push('High churn');
-    if (simBurnRate > simRevenue * 2) simRiskFlags.push('High burn multiple');
+    // ── 3. RAISE FUNDING ───────────────────────────────────────────────
+    else if (input.scenarioType === 'funding') {
+        const raise = input.fundingAmount || 5000000;
+        const legalCost = Math.round(raise * 0.015); // ~1.5% deal costs
+        scenarioLabel = `Raise ₹${(raise / 100000).toFixed(0)}L Funding`;
+        summary = `Injecting ₹${(raise/100000).toFixed(1)}L. After ~1.5% deal costs (₹${(legalCost/1000).toFixed(0)}K), runway extends significantly.`;
 
-    const simRiskLevel = simRiskFlags.length >= 3 ? 'Critical' : simRiskFlags.length >= 2 ? 'High' : simRiskFlags.length >= 1 ? 'Moderate' : 'Low';
+        monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
+            revDelta: 0,
+            expDelta: i === 0 ? legalCost / 3 : i === 1 ? legalCost / 3 : i === 2 ? legalCost / 3 : 0,
+            cashDelta: i === 0 ? raise - legalCost : 0,
+            userDelta: 0
+        }));
+    }
+
+    // ── 4. EXPAND TO NEW MARKETS ───────────────────────────────────────
+    else if (input.scenarioType === 'expansion') {
+        const cities     = input.numCities || 3;
+        const setupCost  = (input.setupCostPerCity || 500000) * cities;
+        const opsCost    = cities * 150000; // monthly ops per city
+        const cityRev    = (input.revenuePerCityPerMonth || 200000) * cities;
+        scenarioLabel = `Expand to ${cities} New Cit${cities > 1 ? 'ies' : 'y'}`;
+        summary = `Setup cost: ₹${(setupCost/100000).toFixed(1)}L. Monthly ops: +₹${(opsCost/1000).toFixed(0)}K. Revenue kicks in from month 3.`;
+
+        monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
+            revDelta: i < 3 ? 0 : cityRev / 12, // revenue ramp after 3 months
+            expDelta: i === 0 ? opsCost : 0, // step-up in ops cost
+            cashDelta: i === 0 ? -setupCost : 0, // one-time setup spend
+            userDelta: i < 3 ? 0 : Math.round(cityRev / (arpu || 500))
+        }));
+    }
+
+    // ── 5. CUSTOM (legacy sliders) ─────────────────────────────────────
+    else {
+        const revP  = (input.revenueChangePercent || 0) / 100;
+        const expP  = (input.expenseChangePercent  || 0) / 100;
+        const fund  = input.additionalFunding       || 0;
+        const churP = (input.churnChangePercent     || 0) / 100;
+        scenarioLabel = 'Custom Scenario';
+        summary = `Revenue ${revP > 0 ? '+' : ''}${(revP*100).toFixed(0)}%, Expenses -${(expP*100).toFixed(0)}%, Funding +₹${(fund/100000).toFixed(1)}L, Churn -${(churP*100).toFixed(0)}%`;
+
+        const revDelta1  = curRevenue * revP;
+        const expDelta1  = -curExp * expP;
+        const userDelta1 = Math.round(curUsers * churP * 0.1);
+        monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
+            revDelta: i === 0 ? revDelta1 : 0,
+            expDelta: i === 0 ? expDelta1 : 0,
+            cashDelta: i === 0 ? fund : 0,
+            userDelta: i === 0 ? userDelta1 : 0
+        }));
+    }
+
+    // Run 12-month projection
+    const projection = projectMonths(base, monthlyDeltas, 12);
+    const finalMonth = projection[11];
+
+    // Break-even: month when cumulative profit turns positive
+    let cumProfit = -(monthlyDeltas[0]?.cashDelta < 0 ? -monthlyDeltas[0].cashDelta : 0); // upfront cost
+    let breakEvenMonth: number | null = null;
+    for (const m of projection) {
+        cumProfit += m.profit - (base.revenue - base.expenses);
+        if (cumProfit >= 0 && breakEvenMonth === null) breakEvenMonth = m.month;
+    }
+
+    // Final simulated state
+    const simRevenue = finalMonth.revenue;
+    const simExp     = finalMonth.expenses;
+    const simBurn    = finalMonth.burnRate;
+    const simRunway  = finalMonth.runway;
+    const simUsers   = finalMonth.users;
+    const simProfit  = finalMonth.profit;
+
+    const curRisk = riskScore(curBurn, curRunway, curChurn);
+    const simRisk = riskScore(simBurn, simRunway, curChurn);
+
+    const riskLabel = (r: number) => r < 20 ? 'Low' : r < 40 ? 'Moderate' : r < 65 ? 'High' : 'Critical';
+    const fmt = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${n.toLocaleString('en-IN')}`;
+
+    const insights: string[] = [];
+    if (simRunway > curRunway + 6) insights.push(`✅ Runway improves by ${simRunway - curRunway} months — significantly safer financial position.`);
+    else if (simRunway < curRunway - 3) insights.push(`⚠️ Runway reduces by ${curRunway - simRunway} months — monitor cash closely.`);
+    if (simRevenue > curRevenue * 1.2) insights.push(`📈 Revenue grows ${Math.round(((simRevenue - curRevenue) / curRevenue) * 100)}% over 12 months.`);
+    if (simProfit > 0 && curRevenue < curExp) insights.push(`🎉 Scenario could make the startup profitable! Monthly profit: ${fmt(simProfit)}`);
+    if (simBurn > curBurn * 1.5) insights.push(`🔴 Burn rate increases significantly — ensure revenue catches up within 3 months.`);
+    if (breakEvenMonth !== null) insights.push(`💰 Investment break-even estimated at month ${breakEvenMonth}.`);
+    else insights.push(`📊 Investment does not break even within 12 months — review before committing.`);
+    if (simUsers > curUsers * 1.1) insights.push(`👥 User base grows from ${curUsers.toLocaleString()} → ${simUsers.toLocaleString()} over 12 months.`);
+
+    const chg = (cur: number, sim: number, fmt2?: (n: number) => string) => {
+        const d = sim - cur;
+        const pct = cur > 0 ? ((d / cur) * 100).toFixed(0) : '—';
+        const sign = d >= 0 ? '+' : '';
+        return fmt2 ? `${sign}${fmt2(d)}` : `${sign}${pct}%`;
+    };
 
     return {
-        current: {
-            revenue: curRevenue, expenses: curExpenses, burnRate: curBurnRate,
-            runway: curRunway, churn: curChurn, users: curUsers,
-            score: curScore, funding: latest.financial.totalFunding || 0
-        },
-        simulated: {
-            revenue: Math.round(simRevenue), expenses: Math.round(simExpenses),
-            burnRate: Math.round(simBurnRate), runway: simRunway,
-            churn: parseFloat(simChurn.toFixed(1)), users: Math.round(simUsers),
-            score: simScore, funding: totalFunding,
-            riskLevel: simRiskLevel, riskFlags: simRiskFlags
-        },
+        scenario: scenarioLabel,
+        summary,
+        current: { revenue: curRevenue, expenses: curExp, burnRate: curBurn, runway: curRunway, users: curUsers, riskScore: curRisk, riskLevel: riskLabel(curRisk), profit: curRevenue - curExp },
+        simulated: { revenue: simRevenue, expenses: simExp, burnRate: simBurn, runway: simRunway, users: simUsers, riskScore: simRisk, riskLevel: riskLabel(simRisk), profit: simProfit },
+        monthlyProjection: projection,
         comparison: [
-            { metric: 'Revenue', current: curRevenue, simulated: Math.round(simRevenue), change: `${revenueChangePercent > 0 ? '+' : ''}${revenueChangePercent}%` },
-            { metric: 'Expenses', current: curExpenses, simulated: Math.round(simExpenses), change: `${expenseChangePercent > 0 ? '-' : '+'}${Math.abs(expenseChangePercent)}%` },
-            { metric: 'Burn Rate', current: curBurnRate, simulated: Math.round(simBurnRate), change: `${((simBurnRate - curBurnRate) / (curBurnRate || 1) * 100).toFixed(0)}%` },
-            { metric: 'Runway', current: curRunway, simulated: simRunway, change: `${simRunway - curRunway > 0 ? '+' : ''}${simRunway - curRunway} months` },
-            { metric: 'Churn Rate', current: curChurn, simulated: parseFloat(simChurn.toFixed(1)), change: `${churnChangePercent > 0 ? '-' : '+'}${Math.abs(churnChangePercent)}%` },
-            { metric: 'Health Score', current: curScore, simulated: simScore, change: `${simScore - curScore > 0 ? '+' : ''}${simScore - curScore}` },
-        ]
+            { metric: 'Revenue/Month',    current: fmt(curRevenue), simulated: fmt(simRevenue), change: chg(curRevenue, simRevenue),    better: simRevenue > curRevenue },
+            { metric: 'Expenses/Month',   current: fmt(curExp),     simulated: fmt(simExp),     change: chg(curExp, simExp),            better: simExp <= curExp },
+            { metric: 'Burn Rate',        current: fmt(curBurn),    simulated: fmt(simBurn),    change: chg(curBurn, simBurn),          better: simBurn < curBurn },
+            { metric: 'Runway (months)',  current: curRunway === 999 ? '∞' : String(curRunway), simulated: simRunway === 999 ? '∞' : String(simRunway), change: simRunway === 999 ? '+∞' : `${simRunway - curRunway > 0 ? '+' : ''}${simRunway - curRunway} mo`, better: simRunway >= curRunway },
+            { metric: 'Active Users',     current: curUsers.toLocaleString(), simulated: simUsers.toLocaleString(), change: chg(curUsers, simUsers), better: simUsers > curUsers },
+            { metric: 'Profitability',    current: fmt(curRevenue - curExp), simulated: fmt(simProfit), change: chg(curRevenue - curExp, simProfit, fmt), better: simProfit > curRevenue - curExp },
+            { metric: 'Risk Level',       current: riskLabel(curRisk), simulated: riskLabel(simRisk), change: simRisk < curRisk ? `↓ ${curRisk - simRisk}pts` : simRisk > curRisk ? `↑ ${simRisk - curRisk}pts` : '—', better: simRisk <= curRisk },
+        ],
+        insights,
+        breakEvenMonth,
+        riskDelta: curRisk - simRisk
     };
 }

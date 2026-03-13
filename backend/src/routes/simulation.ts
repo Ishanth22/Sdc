@@ -11,15 +11,7 @@ router.post('/', authenticate, requireFeature('scenario_simulation'), async (req
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
         if (!profile) return res.status(404).json({ error: 'Startup profile not found' });
 
-        const { revenueChangePercent, expenseChangePercent, additionalFunding, churnChangePercent } = req.body;
-
-        const result = await simulateScenario(profile._id, {
-            revenueChangePercent: Number(revenueChangePercent) || 0,
-            expenseChangePercent: Number(expenseChangePercent) || 0,
-            additionalFunding: Number(additionalFunding) || 0,
-            churnChangePercent: Number(churnChangePercent) || 0
-        });
-
+        const result = await simulateScenario(profile._id, req.body);
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message });

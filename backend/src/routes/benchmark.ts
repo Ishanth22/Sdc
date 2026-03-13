@@ -25,7 +25,16 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.json({ benchmark: null, own: null, message: 'No metrics submitted yet' });
         }
 
-        const benchmark = await Benchmark.findOne({ sector, stage, period });
+        // Try exact period match first, then fall back to most recent benchmark for sector/stage
+        let benchmark = await Benchmark.findOne({ sector, stage, period });
+        if (!benchmark) {
+            benchmark = await Benchmark.findOne({ sector, stage }).sort({ period: -1 });
+        }
+        // If still no match, try any benchmark for the sector
+        if (!benchmark) {
+            benchmark = await Benchmark.findOne({ sector }).sort({ period: -1 });
+        }
+
         const ownMetrics = await Metrics.findOne({ startupId: profile._id, period });
 
         // Build comparison

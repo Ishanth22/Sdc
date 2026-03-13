@@ -18,7 +18,7 @@ import { calculateVitalityScore } from './services/vitalityScore';
 
 async function seedDemoData() {
     console.log('🌱 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI || '');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://lmelvindenish_db_user:melvindenish@cluster0.t5hb9cw.mongodb.net/nspms?appName=Cluster0');
     console.log('✅ Connected\n');
 
     // Find the demo founder

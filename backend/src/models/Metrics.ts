@@ -7,7 +7,8 @@ export interface IMetrics extends Document {
         revenue: number;
         monthlyExpenses: number;
         burnRate: number;
-        runwayMonths: number;
+        cashOnHand: number;   // current bank balance → used to calc runway
+        runwayMonths: number; // auto-calc: cashOnHand / burnRate
         totalFunding: number;
         fundingAmount: number;
         fundingType: string;
@@ -44,6 +45,7 @@ const MetricsSchema = new Schema<IMetrics>({
         revenue: { type: Number, default: 0 },
         monthlyExpenses: { type: Number, default: 0 },
         burnRate: { type: Number, default: 0 },
+        cashOnHand: { type: Number, default: 0 },
         runwayMonths: { type: Number, default: 0 },
         totalFunding: { type: Number, default: 0 },
         fundingAmount: { type: Number, default: 0 },
