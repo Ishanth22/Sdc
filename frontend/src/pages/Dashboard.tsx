@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
+import React, { useEffect, useRef, useState } from 'react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import api from '../api/client';
 import Navbar from '../components/Navbar';
 import ScoreGauge from '../components/ScoreGauge';
+import { useLocation } from 'react-router-dom';
 
 const EXPENSE_COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
 
@@ -14,7 +15,32 @@ const Dashboard: React.FC = () => {
     const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => { loadData(); }, []);
+    const lastUpdatedRef = useRef<string | null>(null);
+    const location = useLocation();
+
+    useEffect(() => {
+        loadData();
+        lastUpdatedRef.current = localStorage.getItem('metricsUpdatedAt');
+
+        // Listen for storage events (works when the page submits in another tab)
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === 'metricsUpdatedAt' && e.newValue !== lastUpdatedRef.current) {
+                lastUpdatedRef.current = e.newValue;
+                loadData();
+            }
+        };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
+    }, []);
+
+    // Check localStorage on every in-app navigation to this page
+    useEffect(() => {
+        const stored = localStorage.getItem('metricsUpdatedAt');
+        if (stored && stored !== lastUpdatedRef.current) {
+            lastUpdatedRef.current = stored;
+            loadData();
+        }
+    }, [location.pathname]);
 
     const loadData = async () => {
         try {
@@ -73,7 +99,7 @@ const Dashboard: React.FC = () => {
         expenses: Math.round((m.financial.monthlyExpenses || m.financial.burnRate) / 100000),
     }));
 
-    // Expense distribution pie chart data
+    
     const expensePieData = latest ? [
         { name: 'Operations', value: Math.round((latest.financial.burnRate || 0) * 0.35) },
         { name: 'Salaries', value: Math.round((latest.financial.burnRate || 0) * 0.30) },
@@ -99,7 +125,7 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Auto-calculate growth rates
+    
     const prevMetrics = metrics[1];
     const revenueGrowthRate = prevMetrics && prevMetrics.financial.revenue > 0
         ? Math.round(((latest?.financial.revenue - prevMetrics.financial.revenue) / prevMetrics.financial.revenue) * 100) : null;
@@ -110,7 +136,7 @@ const Dashboard: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{profile?.companyName || 'My Startup'}</h1>
@@ -118,7 +144,7 @@ const Dashboard: React.FC = () => {
                             <span className="px-2.5 py-0.5 bg-indigo-500/15 text-indigo-300 rounded-full text-xs font-semibold">{profile?.sector}</span>
                             <span className="px-2.5 py-0.5 bg-violet-500/15 text-violet-300 rounded-full text-xs font-semibold">{profile?.stage}</span>
                             <span className="text-xs text-slate-500">{profile?.city}</span>
-                            {/* Risk Level Badge */}
+                            {}
                             {score?.riskLevel && (
                                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getRiskColor(score.riskLevel)}`}>
                                     {score.riskLevel === 'Low' ? '🟢' : score.riskLevel === 'Moderate' ? '🟡' : score.riskLevel === 'High' ? '🟠' : '🔴'} {score.riskLevel} Risk
@@ -127,7 +153,7 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-6">
-                        {/* Funding Readiness */}
+                        {}
                         {score?.fundingReadiness !== undefined && (
                             <div className="text-center">
                                 <p className="text-xs text-slate-500 mb-1">Funding Ready</p>
@@ -143,7 +169,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Score Explanation */}
+                {}
                 {score?.explanation && score.explanation.length > 0 && (
                     <div className="bg-slate-900/50 border border-slate-800/40 rounded-xl p-4 mb-6">
                         <div className="space-y-1">
@@ -154,7 +180,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/* Score Component Breakdown */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
                     {[
                         { label: 'Revenue Growth', value: score?.components?.revenueGrowth || score?.components?.financial || 0, color: 'from-green-500 to-emerald-600', emoji: '📈', weight: '25%' },
@@ -180,7 +206,7 @@ const Dashboard: React.FC = () => {
                     ))}
                 </div>
 
-                {/* KPI Cards */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
                     {[
                         { label: 'Revenue', value: latest ? formatINR(latest.financial.revenue) : '—', sub: '/month', badge: revenueGrowthRate !== null ? `${revenueGrowthRate > 0 ? '+' : ''}${revenueGrowthRate}%` : null, badgeColor: (revenueGrowthRate || 0) > 0 ? 'text-green-400' : 'text-red-400' },
@@ -201,7 +227,7 @@ const Dashboard: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Charts Row 1: Revenue + User Growth */}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">📈 Revenue Growth Trend (₹ Lakhs)</h3>
@@ -239,7 +265,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Charts Row 2: Expense vs Revenue + Burn Rate Trend */}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">💰 Revenue vs Expenses (₹ Lakhs)</h3>
@@ -272,9 +298,9 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Charts Row 3: Expense Pie + Benchmark */}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    {/* Expense Distribution Pie */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">🥧 Expense Distribution</h3>
                         {expensePieData.length > 0 ? (
@@ -287,7 +313,7 @@ const Dashboard: React.FC = () => {
                                             ))}
                                         </Pie>
                                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
-                                            formatter={(value: number) => formatINR(value)} />
+                                            formatter={(value: number | undefined) => value != null ? formatINR(value) : ''} />
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="flex flex-wrap gap-2 justify-center">
@@ -304,7 +330,7 @@ const Dashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Benchmark */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">📊 Startup vs Industry Average</h3>
                         {benchmark?.benchmark ? (
@@ -349,7 +375,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Alerts Panel */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                     <h3 className="text-sm font-semibold text-white mb-4">🔔 Smart Alerts</h3>
                     {alerts.length > 0 ? (

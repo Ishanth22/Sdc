@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import api from '../api/client';
 import Navbar from '../components/Navbar';
 
-/* Styled markdown renderer for AI responses */
+
 const MarkdownResponse: React.FC<{ content: string }> = ({ content }) => (
     <div className="prose-ai">
         <ReactMarkdown
@@ -128,7 +128,7 @@ const AIAdvisor: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
+                {}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-pink-600 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-violet-500/25">
                         🤖
@@ -149,7 +149,7 @@ const AIAdvisor: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Data Context */}
+                {}
                 <div className="bg-slate-900/50 border border-slate-800/40 rounded-xl p-5 mb-6">
                     <div className="flex flex-wrap items-center gap-6 mb-3">
                         {[
@@ -178,7 +178,7 @@ const AIAdvisor: React.FC = () => {
                     )}
                 </div>
 
-                {/* AI Recommendations */}
+                {}
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
                     🧠 AI Analysis & Recommendations
                 </h3>
@@ -201,19 +201,19 @@ const AIAdvisor: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Chat History */}
+                {}
                 {chatHistory.length > 0 && (
                     <div className="mb-6">
                         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">💬 Conversation</h3>
                         <div className="space-y-4">
                             {chatHistory.map((item, i) => (
                                 <div key={i} className="bg-slate-900/60 border border-violet-500/15 rounded-xl overflow-hidden">
-                                    {/* User question */}
+                                    {}
                                     <div className="flex items-start gap-3 p-4 bg-slate-800/20">
                                         <div className="w-8 h-8 bg-indigo-500/20 rounded-full flex items-center justify-center text-sm flex-shrink-0">👤</div>
                                         <p className="text-sm text-white font-medium pt-1">{item.question}</p>
                                     </div>
-                                    {/* AI answer */}
+                                    {}
                                     <div className="p-4">
                                         <div className="flex items-start gap-3">
                                             <div className="w-8 h-8 bg-gradient-to-br from-violet-500/30 to-pink-500/30 rounded-full flex items-center justify-center text-sm flex-shrink-0">🤖</div>
@@ -247,7 +247,7 @@ const AIAdvisor: React.FC = () => {
                     </div>
                 )}
 
-                {/* Ask a Question */}
+                {}
                 <div className="bg-slate-900/70 border border-slate-800/50 rounded-xl p-6 sticky bottom-4">
                     <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                         Ask the AI Advisor

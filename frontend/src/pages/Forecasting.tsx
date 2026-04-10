@@ -2,18 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import api from '../api/client';
 import Navbar from '../components/Navbar';
+import { useLocation } from 'react-router-dom';
 
 const Forecasting: React.FC = () => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
+    const location = useLocation();
+
+    const fetchForecast = () => {
+        setLoading(true);
+        setError('');
         api.get('/forecast')
             .then(res => setData(res.data))
             .catch(err => setError(err.response?.data?.error || err.message))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchForecast();
     }, []);
+
+    // Refresh when navigating here after a metrics submit
+    useEffect(() => {
+        if ((location.state as any)?.refresh) {
+            fetchForecast();
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const fmt = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${n.toLocaleString('en-IN')}`;
 
@@ -36,13 +53,7 @@ const Forecasting: React.FC = () => {
 
     if (!data) return null;
 
-    /**
-     * Split a flat [{period, value, type}] array into two series:
-     * - actualValue  → filled for type='actual', plus one bridge point at the first forecast
-     * - forecastValue → filled for type='forecast', plus one bridge point at the last actual
-     * This lets Recharts render two <Line> elements with different strokeDasharray,
-     * connected seamlessly at the boundary.
-     */
+    
     const buildDualSeries = (arr: any[]) => {
         const lastActualIdx = arr.reduce((acc: number, d: any, i: number) => d.type === 'actual' ? i : acc, -1);
         return arr.map((d: any, i: number) => ({
@@ -64,7 +75,7 @@ const Forecasting: React.FC = () => {
     const tooltipStyle = { background: '#0f172a', border: '1px solid #334155', borderRadius: 8 };
     const labelStyle = { color: '#94a3b8' };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     const makeFmt = (fn: (v: any) => string) => (v: any, name: any) =>
         [fn(v), name === 'actualValue' ? 'Actual' : '🤖 AI Forecast'] as [string, string];
 
@@ -88,7 +99,7 @@ const Forecasting: React.FC = () => {
             <Navbar />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                {/* ── Header ── */}
+                {}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/25">📈</div>
@@ -114,7 +125,7 @@ const Forecasting: React.FC = () => {
                     </div>
                 </div>
 
-                {/* ── Runway Alert ── */}
+                {}
                 <div className={`rounded-xl p-5 mb-6 border ${data.projectedRunoutMonths <= 6 ? 'bg-red-500/10 border-red-500/30' : data.projectedRunoutMonths <= 12 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{data.projectedRunoutMonths <= 6 ? '🔴' : data.projectedRunoutMonths <= 12 ? '🟡' : '🟢'}</span>
@@ -125,7 +136,7 @@ const Forecasting: React.FC = () => {
                     </div>
                 </div>
 
-                {/* ── Sector Context + Confidence ── */}
+                {}
                 {data.sectorContext && (
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <span className="px-3 py-1.5 bg-indigo-500/15 border border-indigo-500/30 rounded-lg text-xs font-bold text-indigo-300 uppercase">🏢 {data.sectorContext.sector}</span>
@@ -141,7 +152,7 @@ const Forecasting: React.FC = () => {
                     </div>
                 )}
 
-                {/* ── Forecast Insights ── */}
+                {}
                 <div className="bg-slate-900/50 border border-slate-800/40 rounded-xl p-5 mb-6">
                     <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">🧠 Forecast Insights</h3>
                     <div className="space-y-2">
@@ -153,7 +164,7 @@ const Forecasting: React.FC = () => {
                     </div>
                 </div>
 
-                {/* ── AI Deep Insights ── */}
+                {}
                 {data.aiInsights && (
                     <div className="bg-gradient-to-br from-purple-500/5 to-blue-500/5 border border-purple-500/20 rounded-xl p-5 mb-6">
                         <div className="flex items-center gap-2 mb-3">
@@ -173,7 +184,7 @@ const Forecasting: React.FC = () => {
                     </div>
                 )}
 
-                {/* ── Regulatory Risks ── */}
+                {}
                 {data.regulatoryRisks?.length > 0 && (
                     <div className="bg-slate-900/50 border border-slate-800/40 rounded-xl p-5 mb-6">
                         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">⚖️ Applicable Government Regulations ({data.regulatoryRisks.length})</h3>
@@ -194,12 +205,12 @@ const Forecasting: React.FC = () => {
                     </div>
                 )}
 
-                {/* ══════════════════════════════════════════════════════════════ */}
-                {/*  CHARTS — solid line = actual data, dashed amber = AI forecast */}
-                {/* ══════════════════════════════════════════════════════════════ */}
+                {}
+                {}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                    {/* Revenue Forecast */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                         <h3 className="text-sm font-semibold text-white mb-0.5">📈 Revenue Forecast</h3>
                         <p className="text-[10px] text-slate-600 mb-4">━ Actual &nbsp;┅ AI Forecast</p>
@@ -220,7 +231,7 @@ const Forecasting: React.FC = () => {
                         <ChartLegend color="#06b6d4" />
                     </div>
 
-                    {/* Expense Forecast */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                         <h3 className="text-sm font-semibold text-white mb-0.5">💸 Expense Forecast <span className="text-[10px] text-slate-600 ml-1">(incl. regulatory overhead)</span></h3>
                         <p className="text-[10px] text-slate-600 mb-4">━ Actual &nbsp;┅ AI Forecast</p>
@@ -241,7 +252,7 @@ const Forecasting: React.FC = () => {
                         <ChartLegend color="#f43f5e" />
                     </div>
 
-                    {/* User Growth Forecast */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                         <h3 className="text-sm font-semibold text-white mb-0.5">👥 User Growth Forecast</h3>
                         <p className="text-[10px] text-slate-600 mb-4">━ Actual &nbsp;┅ AI Forecast</p>
@@ -262,7 +273,7 @@ const Forecasting: React.FC = () => {
                         <ChartLegend color="#8b5cf6" />
                     </div>
 
-                    {/* Runway Projection */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                         <h3 className="text-sm font-semibold text-white mb-0.5">🛫 Runway Projection (months)</h3>
                         <p className="text-[10px] text-slate-600 mb-4">━ Actual &nbsp;┅ AI Forecast &nbsp;— Red = danger zone</p>

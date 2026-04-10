@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
         <nav className="bg-slate-900/80 backdrop-blur-xl border-b border-indigo-500/10 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
+                    {}
                     <Link to={user?.role === 'admin' ? '/admin' : user?.role === 'investor' ? '/investor' : '/dashboard'} className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-indigo-500/25">
                             VP
@@ -71,7 +71,7 @@ const Navbar: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* Nav Links */}
+                    {}
                     <div className="hidden md:flex items-center gap-1">
                         {links.map(link => (
                             <Link
@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
                                 {link.label}
                             </Link>
                         ))}
-                        {/* More Dropdown (founder only) */}
+                        {}
                         {user?.role === 'founder' && (
                             <div className="relative" ref={moreRef}>
                                 <button
@@ -119,7 +119,7 @@ const Navbar: React.FC = () => {
                         )}
                     </div>
 
-                    {/* User Menu */}
+                    {}
                     <div className="flex items-center gap-3">
                         <div className="hidden sm:flex items-center gap-2">
                             <div className="w-7 h-7 bg-gradient-to-br from-indigo-500/30 to-violet-500/30 rounded-full flex items-center justify-center text-xs text-indigo-300 font-semibold">
@@ -137,7 +137,7 @@ const Navbar: React.FC = () => {
                             Logout
                         </button>
 
-                        {/* Mobile toggle */}
+                        {}
                         <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-slate-400 hover:text-white p-1">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {mobileOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -147,7 +147,7 @@ const Navbar: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Mobile Nav */}
+                {}
                 {mobileOpen && (
                     <div className="md:hidden pb-3 space-y-1 animate-fade-in">
                         {links.map(link => (

@@ -24,7 +24,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
         req.user = user;
 
-        // Attach plan info
+        
         const sub = await Subscription.findOne({ userId: user._id });
         req.plan = sub?.plan || 'free';
 
@@ -55,9 +55,7 @@ export const requireFounder = (req: AuthRequest, res: Response, next: NextFuncti
     next();
 };
 
-/**
- * Feature gate middleware – checks if user's plan includes the required feature.
- */
+
 export const requireFeature = (feature: string) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         const plan = req.plan || 'free';
@@ -74,9 +72,7 @@ export const requireFeature = (feature: string) => {
     };
 };
 
-/**
- * Audit log middleware – logs user actions for enterprise security.
- */
+
 export const auditLog = (action: string, resource: string) => {
     return async (req: AuthRequest, _res: Response, next: NextFunction) => {
         try {
@@ -92,17 +88,14 @@ export const auditLog = (action: string, resource: string) => {
                 });
             }
         } catch (e) {
-            // Don't block request if audit fails
+            
             console.error('Audit log error:', e);
         }
         next();
     };
 };
 
-/**
- * Organization role middleware – checks if user has the required org role.
- * Supports arrays: requireOrgRole(['owner', 'finance_manager'])
- */
+
 export const requireOrgRole = (roles: string | string[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         const allowed = Array.isArray(roles) ? roles : [roles];

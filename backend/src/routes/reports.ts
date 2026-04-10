@@ -8,7 +8,7 @@ import { authenticate, requireFeature, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/reports/summary – JSON summary for frontend PDF generation
+
 router.get('/summary', authenticate, requireFeature('report_export'), async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -91,7 +91,7 @@ router.get('/summary', authenticate, requireFeature('report_export'), async (req
     }
 });
 
-// GET /api/reports/csv – export metrics as CSV
+
 router.get('/csv', authenticate, requireFeature('report_export'), async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

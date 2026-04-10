@@ -2,16 +2,14 @@ import Metrics from '../models/Metrics';
 import Benchmark from '../models/Benchmark';
 import StartupProfile from '../models/StartupProfile';
 
-/**
- * Compute and store benchmark averages for all sector/stage combos for a given period.
- */
+
 export async function computeBenchmarks(period: string): Promise<void> {
     const sectors = ['Fintech', 'Healthtech', 'Edtech', 'Ecommerce', 'DeepTech', 'Agritech', 'Logistics', 'CleanTech', 'SaaS', 'Other'];
     const stages = ['Idea', 'Seed', 'Early', 'Growth'];
 
     for (const sector of sectors) {
         for (const stage of stages) {
-            // Find all startups in this sector/stage
+            
             const startups = await StartupProfile.find({ sector, stage });
             if (startups.length === 0) continue;
 
@@ -43,9 +41,7 @@ export async function computeBenchmarks(period: string): Promise<void> {
     }
 }
 
-/**
- * Get benchmark for a specific sector, stage, and optionally a specific metric.
- */
+
 export async function getBenchmark(
     sector: string,
     stage: string,

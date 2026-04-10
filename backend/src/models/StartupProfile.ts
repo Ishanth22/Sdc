@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IStartupProfile extends Document {
     userId: mongoose.Types.ObjectId;
     companyName: string;
-    startupName: string;  // alias for alertNotifier
+    startupName: string;  
     cin: string;
     sector: string;
     stage: string;
@@ -43,7 +43,7 @@ const StartupProfileSchema = new Schema<IStartupProfile>({
     alertsEnabled: { type: Boolean, default: true },
 }, { timestamps: true });
 
-// Virtual: startupName → companyName (used by alertNotifier)
+
 StartupProfileSchema.virtual('startupName').get(function() { return this.companyName; });
 
 export default mongoose.model<IStartupProfile>('StartupProfile', StartupProfileSchema);

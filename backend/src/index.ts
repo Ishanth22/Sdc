@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load env from project root
+
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import authRoutes from './routes/auth';
@@ -27,11 +27,11 @@ import aiRiskRoutes from './routes/aiRisk';
 
 const app = express();
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 
-// Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/startup', startupRoutes);
 app.use('/api/metrics', metricsRoutes);
@@ -50,12 +50,12 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ai-risk', aiRiskRoutes);
 
-// Health check
+
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Connect to MongoDB and start server
+
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://lmelvindenish_db_user:melvindenish@cluster0.t5hb9cw.mongodb.net/nspms?appName=Cluster0';
 

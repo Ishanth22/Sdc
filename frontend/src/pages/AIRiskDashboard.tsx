@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from '../api/client';
 import Navbar from '../components/Navbar';
+import { useLocation } from 'react-router-dom';
 
 const PROB_BG: Record<string, string> = { high: 'bg-red-500/15 border-red-500/30 text-red-300', medium: 'bg-amber-500/15 border-amber-500/30 text-amber-300', low: 'bg-green-500/15 border-green-500/30 text-green-300' };
 
@@ -11,9 +12,31 @@ const AIRiskDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'risk' | 'benchmark'>('risk');
     const [error, setError] = useState('');
 
+    const lastUpdatedRef = useRef<string | null>(null);
+    const location = useLocation();
+
     useEffect(() => {
         loadData();
+        lastUpdatedRef.current = localStorage.getItem('metricsUpdatedAt');
+
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === 'metricsUpdatedAt' && e.newValue !== lastUpdatedRef.current) {
+                lastUpdatedRef.current = e.newValue;
+                loadData();
+            }
+        };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
     }, []);
+
+    // Check localStorage on every in-app navigation to this page
+    useEffect(() => {
+        const stored = localStorage.getItem('metricsUpdatedAt');
+        if (stored && stored !== lastUpdatedRef.current) {
+            lastUpdatedRef.current = stored;
+            loadData();
+        }
+    }, [location.pathname]);
 
     const loadData = async () => {
         setLoading(true);
@@ -61,7 +84,7 @@ const AIRiskDashboard: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
+                {}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-purple-500/25">🧠</div>
                     <div>
@@ -84,7 +107,7 @@ const AIRiskDashboard: React.FC = () => {
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 text-sm text-red-400">{error}</div>
                 )}
 
-                {/* Tabs */}
+                {}
                 <div className="flex gap-2 mb-6">
                     <button onClick={() => setActiveTab('risk')}
                         className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'risk' ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg shadow-red-500/25' : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800/40'}`}>
@@ -99,10 +122,10 @@ const AIRiskDashboard: React.FC = () => {
                     </button>
                 </div>
 
-                {/* ─── RISK TAB ─────────────────────────────────────────── */}
+                {}
                 {activeTab === 'risk' && risk && (
                     <div className="space-y-6">
-                        {/* Risk Score Header */}
+                        {}
                         <div className={`bg-gradient-to-r ${getRiskGradient(risk.riskScore)} rounded-2xl p-6 shadow-xl`}>
                             <div className="flex items-center justify-between">
                                 <div>
@@ -123,7 +146,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Trend Analysis */}
+                        {}
                         {risk.trendAnalysis && (
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">📈 Trend Analysis</h3>
@@ -131,7 +154,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* AI Hidden Insights */}
+                        {}
                         {risk.aiInsights && (
                             <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-purple-300 uppercase tracking-wider mb-3">🔮 AI Hidden Risk Detection</h3>
@@ -139,7 +162,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Predictions Grid */}
+                        {}
                         {risk.predictions?.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">⚡ Risk Predictions</h3>
@@ -165,7 +188,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Action Items */}
+                        {}
                         {risk.actionItems?.length > 0 && (
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">✅ AI Recommended Actions</h3>
@@ -182,10 +205,10 @@ const AIRiskDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/* ─── BENCHMARK TAB ────────────────────────────────────── */}
+                {}
                 {activeTab === 'benchmark' && bench && (
                     <div className="space-y-6">
-                        {/* Overall Position */}
+                        {}
                         <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-6 shadow-xl">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -197,9 +220,9 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Strengths & Weaknesses */}
+                        {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Strengths */}
+                            {}
                             <div className="bg-slate-900/60 border border-green-500/20 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-green-400 uppercase tracking-wider mb-4">💪 Strength Areas</h3>
                                 {bench.strengthAreas?.length > 0 ? (
@@ -219,7 +242,7 @@ const AIRiskDashboard: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Weaknesses */}
+                            {}
                             <div className="bg-slate-900/60 border border-red-500/20 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-4">⚠️ Areas to Improve</h3>
                                 {bench.weaknessAreas?.length > 0 ? (
@@ -240,7 +263,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Competitive Edge */}
+                        {}
                         {bench.competitiveEdge && (
                             <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-indigo-300 uppercase tracking-wider mb-3">🌟 Competitive Edge</h3>
@@ -248,7 +271,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* AI Hidden Opportunities */}
+                        {}
                         {bench.aiInsights && (
                             <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-purple-300 uppercase tracking-wider mb-3">🔮 AI-Detected Opportunities</h3>
@@ -256,7 +279,7 @@ const AIRiskDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Recommendations */}
+                        {}
                         {bench.recommendations?.length > 0 && (
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">🚀 AI Recommendations</h3>

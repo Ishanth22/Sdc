@@ -79,7 +79,7 @@ const CustomKPIs: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
+                {}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/25">📐</div>
@@ -93,7 +93,7 @@ const CustomKPIs: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Create Form */}
+                {}
                 {showCreate && (
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6 mb-6">
                         <h3 className="text-sm font-semibold text-white mb-4">Create Custom KPI</h3>
@@ -112,7 +112,7 @@ const CustomKPIs: React.FC = () => {
                             <input value={formula} onChange={e => setFormula(e.target.value)} placeholder="e.g. revenue / users" className="w-full mt-1 px-3 py-2.5 bg-slate-800/60 border border-slate-700/50 rounded-lg text-white text-sm font-mono focus:border-emerald-500 outline-none" />
                             <p className="text-[10px] text-slate-600 mt-1">Variables: {VARIABLES.join(', ')}</p>
                         </div>
-                        {/* Presets */}
+                        {}
                         <div className="mb-4">
                             <p className="text-xs text-slate-500 mb-2">Quick Presets:</p>
                             <div className="flex flex-wrap gap-2">
@@ -135,7 +135,7 @@ const CustomKPIs: React.FC = () => {
                     </div>
                 )}
 
-                {/* KPI Cards */}
+                {}
                 {kpis.length === 0 && !showCreate ? (
                     <div className="text-center py-20 text-slate-600">
                         <p className="text-4xl mb-3">📐</p>

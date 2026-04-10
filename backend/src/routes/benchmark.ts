@@ -6,7 +6,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/benchmark?metric=avgCac&sector=Fintech&stage=Seed
+
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -17,7 +17,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         const sector = (req.query.sector as string) || profile.sector;
         const stage = (req.query.stage as string) || profile.stage;
 
-        // Get latest period with metrics
+        
         const latestMetrics = await Metrics.findOne({ startupId: profile._id }).sort({ period: -1 });
         const period = (req.query.period as string) || latestMetrics?.period || '';
 
@@ -25,25 +25,25 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.json({ benchmark: null, own: null, message: 'No metrics submitted yet' });
         }
 
-        // Try exact period match first, then fall back to most recent benchmark for sector/stage
+        
         let benchmark = await Benchmark.findOne({ sector, stage, period });
         if (!benchmark) {
             benchmark = await Benchmark.findOne({ sector, stage }).sort({ period: -1 });
         }
-        // If still no match, try any benchmark for the sector
+        
         if (!benchmark) {
             benchmark = await Benchmark.findOne({ sector }).sort({ period: -1 });
         }
 
         const ownMetrics = await Metrics.findOne({ startupId: profile._id, period });
 
-        // Build comparison
+        
         const metricKey = req.query.metric as string;
         if (metricKey && benchmark) {
             const bmValue = (benchmark.metrics as any)[metricKey];
             let ownValue: number | null = null;
 
-            // Map benchmark keys to metric paths
+            
             const metricMap: Record<string, string> = {
                 avgRevenue: 'financial.revenue',
                 avgBurnRate: 'financial.burnRate',
@@ -73,7 +73,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/benchmark/percentile – performance percentile ranking
+
 router.get('/percentile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -82,11 +82,11 @@ router.get('/percentile', authenticate, async (req: AuthRequest, res: Response) 
         const ownMetrics = await Metrics.findOne({ startupId: profile._id }).sort({ period: -1 });
         if (!ownMetrics) return res.json({ message: 'No metrics submitted yet', percentiles: null });
 
-        // Get all startups in same sector
+        
         const sectorStartups = await StartupProfile.find({ sector: profile.sector });
         const startupIds = sectorStartups.map(s => s._id);
 
-        // Get latest metrics for each startup
+        
         const allLatest = await Promise.all(startupIds.map(async id => {
             return Metrics.findOne({ startupId: id }).sort({ period: -1 });
         }));
@@ -99,7 +99,7 @@ router.get('/percentile', authenticate, async (req: AuthRequest, res: Response) 
         };
 
         const calcPercentileLower = (values: number[], ownValue: number) => {
-            // For metrics where lower is better (burn rate, churn)
+            
             const sorted = values.sort((a, b) => a - b);
             const rank = sorted.filter(v => v > ownValue).length;
             return validMetrics.length > 1 ? Math.round((rank / (sorted.length - 1)) * 100) : 50;

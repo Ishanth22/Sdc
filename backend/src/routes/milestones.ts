@@ -5,7 +5,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/milestones
+
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -24,7 +24,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// POST /api/milestones
+
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -37,14 +37,19 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             title: req.body.title,
             description: req.body.description || '',
             category: req.body.category || 'other',
-            deadline: new Date(req.body.deadline),
             completionPercent: req.body.completionPercent || 0,
             isOKR: req.body.isOKR || false,
             objectiveType: req.body.objectiveType,
             keyResults: req.body.keyResults || []
         };
 
-        // For OKRs, auto-calculate completion from key results
+        // Only set deadline if a valid date string is provided
+        if (req.body.deadline && req.body.deadline.trim() !== '') {
+            const d = new Date(req.body.deadline);
+            if (!isNaN(d.getTime())) data.deadline = d;
+        }
+
+        
         if (data.isOKR && data.keyResults.length > 0) {
             const avgProgress = data.keyResults.reduce((sum: number, kr: any) => {
                 return sum + Math.min(100, (kr.current / kr.target) * 100);
@@ -59,7 +64,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// PUT /api/milestones/:id
+
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -75,13 +80,13 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Auto-set completedAt
+        
         if (updates.completed === true) {
             updates.completedAt = new Date();
             updates.completionPercent = 100;
         }
 
-        // Recalculate OKR completion from key results
+        
         if (updates.keyResults && updates.keyResults.length > 0) {
             const avgProgress = updates.keyResults.reduce((sum: number, kr: any) => {
                 return sum + Math.min(100, (kr.current / kr.target) * 100);
@@ -109,7 +114,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// PUT /api/milestones/:id/key-result/:krIndex – update a specific key result
+
 router.put('/:id/key-result/:krIndex', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -127,7 +132,7 @@ router.put('/:id/key-result/:krIndex', authenticate, async (req: AuthRequest, re
         if (req.body.title !== undefined) milestone.keyResults[krIdx].title = req.body.title;
         if (req.body.target !== undefined) milestone.keyResults[krIdx].target = req.body.target;
 
-        // Recalculate OKR progress
+        
         const avgProgress = milestone.keyResults.reduce((sum, kr) => {
             return sum + Math.min(100, (kr.current / kr.target) * 100);
         }, 0) / milestone.keyResults.length;
@@ -145,7 +150,7 @@ router.put('/:id/key-result/:krIndex', authenticate, async (req: AuthRequest, re
     }
 });
 
-// DELETE /api/milestones/:id
+
 router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

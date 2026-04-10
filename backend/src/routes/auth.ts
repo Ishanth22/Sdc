@@ -10,9 +10,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const LOCK_DURATION_MS = 15 * 60 * 1000; 
 
-// POST /api/auth/register
+
 router.post('/register', async (req, res: Response) => {
     try {
         const { email, password, role, name, companyName, sector, stage, city, foundedDate } = req.body;
@@ -39,7 +39,7 @@ router.post('/register', async (req, res: Response) => {
             role: userRole
         });
 
-        // If founder, create org + profile
+        
         if (user.role === 'founder') {
             const orgName = companyName || 'My Organization';
             const org = await Organization.create({
@@ -64,7 +64,7 @@ router.post('/register', async (req, res: Response) => {
                 });
             }
 
-            // Default free subscription
+            
             await Subscription.create({ userId: user._id, plan: 'free' });
         }
 
@@ -78,7 +78,7 @@ router.post('/register', async (req, res: Response) => {
     }
 });
 
-// POST /api/auth/login – with account lock
+
 router.post('/login', async (req, res: Response) => {
     try {
         const { email, password } = req.body;
@@ -88,7 +88,7 @@ router.post('/login', async (req, res: Response) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        // Check if account is locked
+        
         if (user.lockedUntil && user.lockedUntil > new Date()) {
             const remainingMs = user.lockedUntil.getTime() - Date.now();
             const remainingMin = Math.ceil(remainingMs / 60000);
@@ -99,7 +99,7 @@ router.post('/login', async (req, res: Response) => {
 
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) {
-            // Increment failed attempts
+            
             user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
             if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
                 user.lockedUntil = new Date(Date.now() + LOCK_DURATION_MS);
@@ -115,7 +115,7 @@ router.post('/login', async (req, res: Response) => {
             });
         }
 
-        // Reset failed attempts on successful login
+        
         user.failedLoginAttempts = 0;
         user.lockedUntil = undefined;
         await user.save();
@@ -130,7 +130,7 @@ router.post('/login', async (req, res: Response) => {
     }
 });
 
-// GET /api/auth/me
+
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -152,25 +152,25 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// POST /api/auth/forgot-password
+
 router.post('/forgot-password', async (req, res: Response) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
-            // Don't reveal if email exists
+            
             return res.json({ message: 'If that email exists, a reset link has been generated.' });
         }
 
         const token = crypto.randomBytes(32).toString('hex');
         user.resetToken = token;
-        user.resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+        user.resetTokenExpiry = new Date(Date.now() + 3600000); 
         await user.save();
 
-        // In production, send email. For now, return token directly.
+        
         res.json({
             message: 'Password reset token generated.',
-            resetToken: token, // Remove in production — send via email instead
+            resetToken: token, 
             expiresIn: '1 hour'
         });
     } catch (error: any) {
@@ -178,7 +178,7 @@ router.post('/forgot-password', async (req, res: Response) => {
     }
 });
 
-// POST /api/auth/reset-password
+
 router.post('/reset-password', async (req, res: Response) => {
     try {
         const { token, newPassword } = req.body;
@@ -208,7 +208,7 @@ router.post('/reset-password', async (req, res: Response) => {
     }
 });
 
-// POST /api/auth/invite – invite a team member to your organization
+
 router.post('/invite', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { email, role } = req.body;
@@ -217,7 +217,7 @@ router.post('/invite', authenticate, async (req: AuthRequest, res: Response) => 
         const validRoles = ['finance_manager', 'growth_manager', 'viewer'];
         const inviteRole = validRoles.includes(role) ? role : 'viewer';
 
-        // Must be org owner
+        
         if (req.user!.orgRole !== 'owner') {
             return res.status(403).json({ error: 'Only organization owners can invite members' });
         }
@@ -225,7 +225,7 @@ router.post('/invite', authenticate, async (req: AuthRequest, res: Response) => 
         const org = await Organization.findById(req.user!.organizationId);
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
-        // Check if already a member
+        
         const existing = await User.findOne({ email });
         if (existing && org.members.some(m => m.userId.toString() === existing._id.toString())) {
             return res.status(400).json({ error: 'User is already a member' });
@@ -236,13 +236,13 @@ router.post('/invite', authenticate, async (req: AuthRequest, res: Response) => 
             email,
             role: inviteRole,
             token,
-            expiresAt: new Date(Date.now() + 7 * 24 * 3600000) // 7 days
+            expiresAt: new Date(Date.now() + 7 * 24 * 3600000) 
         });
         await org.save();
 
         res.json({
             message: `Invite sent to ${email}`,
-            inviteToken: token, // In production: send via email
+            inviteToken: token, 
             role: inviteRole,
             expiresIn: '7 days'
         });
@@ -251,7 +251,7 @@ router.post('/invite', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// POST /api/auth/accept-invite – accept team invitation
+
 router.post('/accept-invite', async (req, res: Response) => {
     try {
         const { token, password, name } = req.body;
@@ -259,7 +259,7 @@ router.post('/accept-invite', async (req, res: Response) => {
             return res.status(400).json({ error: 'Token and password are required' });
         }
 
-        // Find org with this invite token
+        
         const org = await Organization.findOne({
             'invites.token': token,
             'invites.expiresAt': { $gt: new Date() }
@@ -272,7 +272,7 @@ router.post('/accept-invite', async (req, res: Response) => {
         const invite = org.invites.find(i => i.token === token);
         if (!invite) return res.status(400).json({ error: 'Invite not found' });
 
-        // Create or update user
+        
         let user = await User.findOne({ email: invite.email });
         if (!user) {
             const passwordHash = await bcrypt.hash(password, 10);
@@ -290,7 +290,7 @@ router.post('/accept-invite', async (req, res: Response) => {
             await user.save();
         }
 
-        // Add to org members
+        
         org.members.push({ userId: user._id, role: invite.role, joinedAt: new Date() });
         org.invites = org.invites.filter(i => i.token !== token);
         await org.save();
@@ -305,7 +305,7 @@ router.post('/accept-invite', async (req, res: Response) => {
     }
 });
 
-// GET /api/auth/team – list team members
+
 router.get('/team', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         if (!req.user!.organizationId) {

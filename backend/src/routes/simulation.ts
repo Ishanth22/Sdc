@@ -5,7 +5,7 @@ import { simulateScenario } from '../services/forecasting';
 
 const router = Router();
 
-// POST /api/simulation – simulate what-if scenarios
+
 router.post('/', authenticate, requireFeature('scenario_simulation'), async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

@@ -54,12 +54,12 @@ const AdminStartupDetail: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Back */}
+                {}
                 <button onClick={() => navigate('/admin')} className="text-sm text-indigo-400 hover:text-indigo-300 mb-4 inline-block">
                     ← Back to Admin
                 </button>
 
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{startup.companyName}</h1>
@@ -75,7 +75,7 @@ const AdminStartupDetail: React.FC = () => {
                     <ScoreGauge score={latestScore?.score || 0} size={140} />
                 </div>
 
-                {/* Score components */}
+                {}
                 {latestScore && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                         {Object.entries(latestScore.components).map(([key, val]) => (
@@ -90,7 +90,7 @@ const AdminStartupDetail: React.FC = () => {
                     </div>
                 )}
 
-                {/* Risk Flags */}
+                {}
                 {latestScore?.riskFlags?.length > 0 && (
                     <div className="mb-8 p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                         <h3 className="text-sm font-semibold text-amber-300 mb-2">⚠️ Risk Flags</h3>
@@ -102,7 +102,7 @@ const AdminStartupDetail: React.FC = () => {
                     </div>
                 )}
 
-                {/* Charts */}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">Score Trend</h3>
@@ -131,7 +131,7 @@ const AdminStartupDetail: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Metrics Table */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-slate-800/30">
                         <h3 className="text-sm font-semibold text-white">All Metrics</h3>

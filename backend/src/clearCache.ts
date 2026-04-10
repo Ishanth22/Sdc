@@ -1,8 +1,4 @@
-/**
- * Clear all AI analysis caches (forecast + risk + benchmark) for all startups.
- * Use this when you change AI models to force regeneration.
- * Run: npx ts-node src/clearCache.ts
- */
+
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';

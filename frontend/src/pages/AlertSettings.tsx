@@ -12,15 +12,13 @@ const TYPE_ICON: Record<string, string> = {
 };
 
 const AlertSettings: React.FC = () => {
-    const [settings, setSettings]   = useState({ alertPhone: '', alertEmail: '', alertsEnabled: true });
+    const [settings, setSettings]   = useState({ alertEmail: '', alertsEnabled: true });
     const [alerts, setAlerts]       = useState<any[]>([]);
     const [saving, setSaving]       = useState(false);
-    const [testing, setTesting]     = useState(false);
-    const [testResult, setTestResult] = useState<{ ok?: boolean; msg: string } | null>(null);
     const [saved, setSaved]         = useState(false);
 
     useEffect(() => {
-        api.get('/alerts/settings').then(r => setSettings(r.data)).catch(() => {});
+        api.get('/alerts/settings').then(r => setSettings({ alertEmail: r.data.alertEmail || '', alertsEnabled: r.data.alertsEnabled ?? true })).catch(() => {});
         api.get('/alerts').then(r => setAlerts(r.data)).catch(() => {});
     }, []);
 
@@ -29,15 +27,6 @@ const AlertSettings: React.FC = () => {
         try { await api.put('/alerts/settings', settings); setSaved(true); setTimeout(() => setSaved(false), 3000); }
         catch (e: any) { alert(e.response?.data?.error || 'Save failed'); }
         finally { setSaving(false); }
-    };
-
-    const test = async () => {
-        setTesting(true); setTestResult(null);
-        try {
-            const r = await api.post('/alerts/test', { email: settings.alertEmail, phone: settings.alertPhone });
-            setTestResult({ ok: r.data.ok, msg: r.data.ok ? '✅ Test sent! Check your email/SMS.' : `⚠️ Sent with issues: ${r.data.errors?.join(', ')}` });
-        } catch (e: any) { setTestResult({ ok: false, msg: `❌ ${e.response?.data?.error || e.message}` }); }
-        finally { setTesting(false); }
     };
 
     const dismiss = async (id: string) => {
@@ -57,13 +46,13 @@ const AlertSettings: React.FC = () => {
             <Navbar />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-                {/* Header */}
+                {}
                 <div>
                     <h1 className="text-2xl font-bold text-white">🚨 Alert Settings</h1>
-                    <p className="text-sm text-slate-400 mt-1">Get real-time SMS & email when your startup crosses critical thresholds</p>
+                    <p className="text-sm text-slate-400 mt-1">Get real-time email alerts when your startup crosses critical thresholds</p>
                 </div>
 
-                {/* What triggers alerts */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                     <h2 className="text-sm font-bold text-white mb-4">📋 What Triggers Alerts</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -84,10 +73,10 @@ const AlertSettings: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Contact Settings */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-sm font-bold text-white">📲 Notification Contacts</h2>
+                        <h2 className="text-sm font-bold text-white">📧 Notification Email</h2>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <span className="text-xs text-slate-400">Alerts enabled</span>
                             <div className="relative">
@@ -100,37 +89,21 @@ const AlertSettings: React.FC = () => {
                         </label>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">📧 Alert Email</label>
-                            <input type="email" placeholder="you@example.com" value={settings.alertEmail}
-                                onChange={e => setSettings(p => ({ ...p, alertEmail: e.target.value }))} className={inputCls} />
-                            <p className="text-xs text-slate-500 mt-1">Uses Gmail SMTP — configure <code className="text-indigo-400">GMAIL_USER</code> in .env</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">📱 Alert Phone (SMS)</label>
-                            <input type="tel" placeholder="+91 9876543210" value={settings.alertPhone}
-                                onChange={e => setSettings(p => ({ ...p, alertPhone: e.target.value }))} className={inputCls} />
-                            <p className="text-xs text-slate-500 mt-1">Uses Twilio — configure <code className="text-indigo-400">TWILIO_*</code> keys in .env</p>
-                        </div>
+                    <div className="max-w-sm">
+                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">📧 Alert Email</label>
+                        <input type="email" placeholder="you@example.com" value={settings.alertEmail}
+                            onChange={e => setSettings(p => ({ ...p, alertEmail: e.target.value }))} className={inputCls} />
                     </div>
 
-                    <div className="flex items-center gap-3 mt-4">
+                    <div className="mt-4">
                         <button onClick={save} disabled={saving}
                             className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-semibold rounded-lg hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 transition-all">
                             {saving ? 'Saving…' : saved ? '✅ Saved!' : '💾 Save Settings'}
                         </button>
-                        <button onClick={test} disabled={testing || (!settings.alertEmail && !settings.alertPhone)}
-                            className="px-5 py-2 bg-slate-800 border border-slate-700 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 disabled:opacity-40 transition-all">
-                            {testing ? 'Sending…' : '🧪 Send Test Alert'}
-                        </button>
-                        {testResult && (
-                            <span className={`text-sm ${testResult.ok ? 'text-green-400' : 'text-red-400'}`}>{testResult.msg}</span>
-                        )}
                     </div>
                 </div>
 
-                {/* Active Alerts */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/40">
                         <h2 className="text-sm font-bold text-white">
@@ -172,23 +145,6 @@ const AlertSettings: React.FC = () => {
                     )}
                 </div>
 
-                {/* .env setup guide */}
-                <div className="bg-slate-900/40 border border-slate-800/40 rounded-xl p-5">
-                    <h2 className="text-sm font-bold text-slate-300 mb-3">⚙️ Backend Configuration (.env)</h2>
-                    <p className="text-xs text-slate-400 mb-3">Add these keys to <code className="text-indigo-400">Sdc/backend/.env</code> to enable real notifications:</p>
-                    <pre className="bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs text-green-400 overflow-x-auto leading-relaxed">{`# Gmail (for email alerts)
-GMAIL_USER=your.gmail@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx   # 16-char App Password from Google
-
-# Twilio (for SMS alerts)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_auth_token
-TWILIO_PHONE_NUMBER=+1xxxxxxxxxx         # Your Twilio number`}</pre>
-                    <div className="mt-3 flex gap-4 text-xs text-slate-500">
-                        <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">→ Gmail App Password guide</a>
-                        <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">→ Twilio free trial signup</a>
-                    </div>
-                </div>
             </div>
         </div>
     );

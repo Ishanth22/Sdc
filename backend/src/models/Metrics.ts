@@ -2,13 +2,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IMetrics extends Document {
     startupId: mongoose.Types.ObjectId;
-    period: string; // YYYY-MM
+    period: string; 
     financial: {
         revenue: number;
         monthlyExpenses: number;
         burnRate: number;
-        cashOnHand: number;   // current bank balance → used to calc runway
-        runwayMonths: number; // auto-calc: cashOnHand / burnRate
+        cashOnHand: number;   
+        runwayMonths: number; 
         totalFunding: number;
         fundingAmount: number;
         fundingType: string;

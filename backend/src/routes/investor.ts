@@ -6,7 +6,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// Middleware: investor or admin only
+
 const requireInvestorOrAdmin = (req: AuthRequest, res: Response, next: any) => {
     if (req.user?.role !== 'investor' && req.user?.role !== 'admin') {
         return res.status(403).json({ error: 'Investor or Admin access required' });
@@ -16,14 +16,14 @@ const requireInvestorOrAdmin = (req: AuthRequest, res: Response, next: any) => {
 
 router.use(authenticate, requireInvestorOrAdmin);
 
-// GET /api/investor/portfolio-summary – portfolio-level analytics
+
 router.get('/portfolio-summary', async (req: AuthRequest, res: Response) => {
     try {
         const allStartups = await StartupProfile.find();
         const scores = await VitalityScore.find().sort({ period: -1 });
         const latestMetrics = await Metrics.find().sort({ period: -1 });
 
-        // Build portfolio-level stats
+        
         let totalRevenue = 0, totalBurnRate = 0, totalUsers = 0, totalFunding = 0;
         let scoreSum = 0, scoreCount = 0;
         const riskDistribution = { Low: 0, Moderate: 0, High: 0, Critical: 0 };
@@ -53,22 +53,22 @@ router.get('/portfolio-summary', async (req: AuthRequest, res: Response) => {
             riskDistribution[riskLevel as keyof typeof riskDistribution]++;
             startupScores.push({ name: startup.companyName, score, riskLevel });
 
-            // Sector distribution
+            
             const sector = startup.sector || 'Other';
             if (!sectorDistribution[sector]) sectorDistribution[sector] = { count: 0, revenue: 0, funding: 0 };
             sectorDistribution[sector].count++;
             sectorDistribution[sector].revenue += latestM?.financial.revenue || 0;
             sectorDistribution[sector].funding += latestM?.financial.totalFunding || 0;
 
-            // Stage distribution
+            
             const stage = startup.stage || 'Unknown';
             stageDistribution[stage] = (stageDistribution[stage] || 0) + 1;
         }
 
-        // Portfolio Risk Score (0-100, lower = riskier)
+        
         const portfolioRiskScore = scoreCount > 0 ? Math.round(scoreSum / scoreCount) : 0;
 
-        // Funding distribution by sector
+        
         const fundingDistribution = Object.entries(sectorDistribution).map(([sector, data]) => ({
             sector,
             count: data.count,
@@ -96,7 +96,7 @@ router.get('/portfolio-summary', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/investor/startups – list all startups with filters and sorting
+
 router.get('/startups', async (req: AuthRequest, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
@@ -179,7 +179,7 @@ router.get('/startups', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/investor/startup/:id
+
 router.get('/startup/:id', async (req: AuthRequest, res: Response) => {
     try {
         const startup = await StartupProfile.findById(req.params.id);
@@ -196,7 +196,7 @@ router.get('/startup/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/investor/compare?ids=id1,id2
+
 router.get('/compare', async (req: AuthRequest, res: Response) => {
     try {
         const ids = ((req.query.ids as string) || '').split(',').filter(Boolean);

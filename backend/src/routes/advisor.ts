@@ -5,7 +5,7 @@ import { generateAIRecommendations, askAIQuestion, getDataSummary } from '../ser
 
 const router = Router();
 
-// GET /api/advisor – get AI-generated advice based on all company data
+
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -13,10 +13,10 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Startup profile not found' });
         }
 
-        // Get data summary for context display
+        
         const context = await getDataSummary(profile._id);
 
-        // Generate AI recommendations using full company data
+        
         const { advice, contextSummary } = await generateAIRecommendations(profile._id);
 
         res.json({
@@ -38,7 +38,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// POST /api/advisor/ask – answer a custom question using AI with full data context
+
 router.post('/ask', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { question } = req.body;
@@ -51,7 +51,7 @@ router.post('/ask', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Startup profile not found' });
         }
 
-        // Ask AI with full company data context
+        
         const { answer, dataPointsUsed } = await askAIQuestion(profile._id, question);
 
         res.json({ question, answer, dataPointsUsed });

@@ -3,8 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ICustomKPI extends Document {
     startupId: mongoose.Types.ObjectId;
     name: string;
-    formula: string; // e.g. "revenue / activeUsers"
-    unit: string;    // e.g. "%", "₹", "x", "ratio"
+    formula: string; 
+    unit: string;    
     description?: string;
     values: { period: string; value: number }[];
     createdAt: Date;

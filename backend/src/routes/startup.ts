@@ -4,7 +4,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/startup/profile
+
 router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -17,7 +17,7 @@ router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// PUT /api/startup/profile
+
 router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const allowedFields = ['companyName', 'sector', 'stage', 'city', 'teamSize', 'website', 'description', 'foundedDate'];

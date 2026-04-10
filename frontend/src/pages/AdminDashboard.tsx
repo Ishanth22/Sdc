@@ -70,7 +70,7 @@ const AdminDashboard: React.FC = () => {
                 <h1 className="text-2xl font-bold text-white mb-2">🏛️ Admin Dashboard</h1>
                 <p className="text-sm text-slate-400 mb-6">Ecosystem overview of all registered startups.</p>
 
-                {/* Top Cards */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     {[
                         { label: 'Total Startups', value: data?.totals?.startups || 0, emoji: '🏢', color: 'text-indigo-400' },
@@ -86,9 +86,9 @@ const AdminDashboard: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Charts Row */}
+                {}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Sector Pie */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">Sector Distribution</h3>
                         <ResponsiveContainer width="100%" height={260}>
@@ -111,7 +111,7 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Stage Bar */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <h3 className="text-sm font-semibold text-white mb-4">Stage Distribution</h3>
                         <ResponsiveContainer width="100%" height={260}>
@@ -126,7 +126,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* City Heatmap Table */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6 mb-8">
                     <h3 className="text-sm font-semibold text-white mb-4">📍 Geographic Distribution (Top Cities)</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -140,7 +140,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Startup List */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-slate-800/30 flex flex-wrap gap-3 items-center justify-between">
                         <h3 className="text-sm font-semibold text-white">Startup Registry</h3>

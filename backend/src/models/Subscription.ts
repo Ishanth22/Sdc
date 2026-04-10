@@ -18,7 +18,7 @@ const SubscriptionSchema = new Schema<ISubscription>({
 
 export default mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
 
-// Feature access matrix
+
 export const PLAN_FEATURES: Record<PlanType, string[]> = {
     free: [
         'dashboard_basic',

@@ -36,6 +36,15 @@ const Milestones: React.FC = () => {
     };
 
     const handleSave = async () => {
+        // Frontend validation
+        if (!form.title.trim()) {
+            alert('Please enter a title / objective.');
+            return;
+        }
+        if (!form.isOKR && !form.deadline) {
+            alert('Please select a deadline for the milestone.');
+            return;
+        }
         try {
             if (editId) {
                 await api.put(`/milestones/${editId}`, form);
@@ -140,7 +149,7 @@ const Milestones: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Tabs */}
+                {}
                 <div className="flex items-center gap-2 mb-4">
                     {(['all', 'milestone', 'okr'] as const).map(mode => (
                         <button key={mode} onClick={() => setViewMode(mode)}
@@ -150,7 +159,7 @@ const Milestones: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Overall Progress */}
+                {}
                 <div className="bg-slate-900/70 border border-slate-800/50 rounded-xl p-5 mb-6">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-white">Overall Progress</span>
@@ -165,7 +174,7 @@ const Milestones: React.FC = () => {
                     <p className="text-xs text-slate-500 mt-1">{overallProgress}% average completion</p>
                 </div>
 
-                {/* Add/Edit Form */}
+                {}
                 {showForm && (
                     <div className="bg-slate-900/70 border border-indigo-500/20 rounded-xl p-6 mb-6 animate-fade-in">
                         <div className="flex items-center justify-between mb-4">
@@ -217,7 +226,7 @@ const Milestones: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Key Results (OKR only) */}
+                        {}
                         {form.isOKR && (
                             <div className="mt-4 border-t border-slate-800/50 pt-4">
                                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Key Results</h4>
@@ -229,15 +238,41 @@ const Milestones: React.FC = () => {
                                         <button onClick={() => removeKR(i)} className="text-xs text-red-400/60 hover:text-red-400">✕</button>
                                     </div>
                                 ))}
-                                <div className="flex gap-2 mt-2">
-                                    <input value={newKR.title} onChange={e => setNewKR({ ...newKR, title: e.target.value })}
-                                        placeholder="Key result title" className={`flex-1 ${inputClass}`} />
-                                    <input type="number" value={newKR.target} onChange={e => setNewKR({ ...newKR, target: Number(e.target.value) })}
-                                        placeholder="Target" className={`w-20 ${inputClass}`} />
-                                    <input value={newKR.unit} onChange={e => setNewKR({ ...newKR, unit: e.target.value })}
-                                        placeholder="Unit" className={`w-20 ${inputClass}`} />
-                                    <button onClick={addKeyResult}
-                                        className="px-3 py-2 bg-amber-600/80 text-white text-xs rounded-lg hover:bg-amber-500 transition-all">+ Add</button>
+                                <div className="mt-3 bg-slate-800/30 rounded-lg p-3 space-y-2">
+                                    <p className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Add Key Result</p>
+                                    <input
+                                        value={newKR.title}
+                                        onChange={e => setNewKR({ ...newKR, title: e.target.value })}
+                                        placeholder="e.g., Increase monthly revenue"
+                                        className={inputClass}
+                                    />
+                                    <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] text-slate-500 mb-1">Target Value</label>
+                                            <input
+                                                type="number"
+                                                value={newKR.target}
+                                                onChange={e => setNewKR({ ...newKR, target: Number(e.target.value) })}
+                                                placeholder="100"
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] text-slate-500 mb-1">Unit (optional)</label>
+                                            <input
+                                                value={newKR.unit}
+                                                onChange={e => setNewKR({ ...newKR, unit: e.target.value })}
+                                                placeholder="e.g., ₹, users, %"
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={addKeyResult}
+                                        className="w-full px-3 py-2 bg-amber-600/80 text-white text-xs font-semibold rounded-lg hover:bg-amber-500 transition-all"
+                                    >
+                                        + Add Key Result
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -253,7 +288,7 @@ const Milestones: React.FC = () => {
                     </div>
                 )}
 
-                {/* Milestones List */}
+                {}
                 {filteredMilestones.length === 0 ? (
                     <div className="bg-slate-900/50 border border-slate-800/40 rounded-xl p-12 text-center">
                         <p className="text-4xl mb-3">{viewMode === 'okr' ? '📊' : '🎯'}</p>
@@ -306,7 +341,7 @@ const Milestones: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Key Results (OKR) */}
+                                    {}
                                     {m.isOKR && m.keyResults?.length > 0 && (
                                         <div className="mb-3 space-y-2">
                                             {m.keyResults.map((kr: any, i: number) => {
@@ -334,7 +369,7 @@ const Milestones: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Progress Bar */}
+                                    {}
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 h-2.5 bg-slate-800 rounded-full overflow-hidden">
                                             <div

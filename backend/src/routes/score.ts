@@ -6,7 +6,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/score/current – includes risk level, explanation, funding readiness
+
 router.get('/current', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -26,14 +26,14 @@ router.get('/current', authenticate, async (req: AuthRequest, res: Response) => 
             });
         }
 
-        // Calculate risk level from flags
+        
         const riskFlagCount = latest.riskFlags.length;
         let riskLevel = 'Low';
         if (riskFlagCount >= 4) riskLevel = 'Critical';
         else if (riskFlagCount >= 3) riskLevel = 'High';
         else if (riskFlagCount >= 1) riskLevel = 'Moderate';
 
-        // Generate explanation
+        
         const explanation: string[] = [];
         const score = latest.score;
         const c = latest.components as any;
@@ -58,7 +58,7 @@ router.get('/current', authenticate, async (req: AuthRequest, res: Response) => 
         if (c.runwayStability >= 70) explanation.push('Comfortable runway gives stability.');
         else if (c.runwayStability < 40) explanation.push('Short runway — consider fundraising.');
 
-        // Calculate funding readiness
+        
         const latestMetrics = await Metrics.findOne({ startupId: profile._id }).sort({ period: -1 });
         let fundingReadiness = 0;
         if (latestMetrics) {
@@ -84,7 +84,7 @@ router.get('/current', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// GET /api/score/history
+
 router.get('/history', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

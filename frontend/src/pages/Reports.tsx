@@ -44,7 +44,7 @@ const Reports: React.FC = () => {
         <div className="min-h-screen bg-slate-950">
             <Navbar />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
+                {}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/25">📄</div>
@@ -62,7 +62,7 @@ const Reports: React.FC = () => {
                     </div>
                 )}
 
-                {/* Actions */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <button onClick={generateReport} disabled={loading} className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5 hover:border-indigo-500/30 transition-all text-left group">
                         <span className="text-2xl">📊</span>
@@ -81,7 +81,7 @@ const Reports: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Report Preview */}
+                {}
                 {loading && (
                     <div className="flex items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500" />
@@ -90,7 +90,7 @@ const Reports: React.FC = () => {
 
                 {report && (
                     <div id="report-content" className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-8 print:bg-white print:text-black print:border-none">
-                        {/* Report Header */}
+                        {}
                         <div className="border-b border-slate-700/50 pb-4 mb-6 print:border-black/20">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -104,7 +104,7 @@ const Reports: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Health Score */}
+                        {}
                         {report.healthScore && (
                             <div className="mb-6">
                                 <h3 className="text-sm font-semibold text-slate-400 print:text-gray-600 uppercase tracking-wider mb-3">Health Score</h3>
@@ -121,7 +121,7 @@ const Reports: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Current Metrics */}
+                        {}
                         {report.currentMetrics && (
                             <div className="mb-6">
                                 <h3 className="text-sm font-semibold text-slate-400 print:text-gray-600 uppercase tracking-wider mb-3">Latest Metrics ({report.currentMetrics.period})</h3>
@@ -145,7 +145,7 @@ const Reports: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Metrics History Table */}
+                        {}
                         <div className="mb-6">
                             <h3 className="text-sm font-semibold text-slate-400 print:text-gray-600 uppercase tracking-wider mb-3">Historical Metrics ({report.summary.totalMetricsMonths} months)</h3>
                             <div className="overflow-x-auto">
@@ -176,7 +176,7 @@ const Reports: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Milestones */}
+                        {}
                         {report.milestones.length > 0 && (
                             <div className="mb-6">
                                 <h3 className="text-sm font-semibold text-slate-400 print:text-gray-600 uppercase tracking-wider mb-3">
@@ -193,7 +193,7 @@ const Reports: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Active Alerts */}
+                        {}
                         {report.activeAlerts.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-semibold text-slate-400 print:text-gray-600 uppercase tracking-wider mb-3">Active Alerts ({report.activeAlerts.length})</h3>

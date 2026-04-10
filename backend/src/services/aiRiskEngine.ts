@@ -10,7 +10,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const MODEL = 'arcee-ai/trinity-large-preview:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// ─── AI CALL WITH RETRY ────────────────────────────────────────────────
+
 
 async function callAI(prompt: string, maxRetries = 2): Promise<string> {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -53,7 +53,7 @@ async function callAI(prompt: string, maxRetries = 2): Promise<string> {
     return '';
 }
 
-// ─── AI RISK PREDICTION ENGINE ─────────────────────────────────────────
+
 
 export interface AIRiskPrediction {
     overallRiskLevel: string;
@@ -74,7 +74,7 @@ export interface AIRiskPrediction {
 export async function generateAIRiskPrediction(
     startupId: mongoose.Types.ObjectId | string
 ): Promise<AIRiskPrediction> {
-    // ─── SMART CACHE CHECK ─────────────────────────────────────────────
+    
     const allMetrics = await Metrics.find({ startupId }).sort({ period: 1 });
     const profile = await StartupProfile.findById(startupId);
     if (!profile) throw new Error('Startup not found');
@@ -112,7 +112,7 @@ export async function generateAIRiskPrediction(
         };
     }
 
-    // Build the data context for AI
+    
     const metricsHistory = allMetrics.map(m => ({
         period: m.period,
         revenue: m.financial.revenue,
@@ -133,7 +133,7 @@ export async function generateAIRiskPrediction(
         riskFlags: s.riskFlags
     }));
 
-    // Rule-based risk metrics (baseline)
+    
     const latest = allMetrics[allMetrics.length - 1];
     const prev = allMetrics.length >= 2 ? allMetrics[allMetrics.length - 2] : null;
     const prev2 = allMetrics.length >= 3 ? allMetrics[allMetrics.length - 3] : null;
@@ -186,7 +186,7 @@ export async function generateAIRiskPrediction(
 
     ruleBasedRiskScore = Math.min(100, ruleBasedRiskScore);
 
-    // ─── AI ANALYSIS ────────────────────────────────────────────────────
+    
 
     const aiPrompt = `You are an expert startup risk analyst and venture capital advisor. Analyze this startup's data and provide a risk prediction.
 
@@ -272,7 +272,7 @@ Be specific and data-driven. Reference actual numbers from the metrics. Include 
         isAIPowered
     };
 
-    // ─── PERSIST TO CACHE ──────────────────────────────────────────────
+    
     try {
         await AnalysisCache.findOneAndUpdate(
             { startupId, cacheType: 'risk-prediction' },
@@ -295,7 +295,7 @@ Be specific and data-driven. Reference actual numbers from the metrics. Include 
     return result;
 }
 
-// ─── AI BENCHMARKING ENGINE ────────────────────────────────────────────
+
 
 export interface AIBenchmarkAnalysis {
     overallPosition: string;
@@ -311,7 +311,7 @@ export interface AIBenchmarkAnalysis {
 export async function generateAIBenchmarkAnalysis(
     startupId: mongoose.Types.ObjectId | string
 ): Promise<AIBenchmarkAnalysis> {
-    // ─── SMART CACHE CHECK ─────────────────────────────────────────────
+    
     const allMetrics = await Metrics.find({ startupId }).sort({ period: 1 });
     const profile = await StartupProfile.findById(startupId);
     if (!profile) throw new Error('Startup not found');
@@ -341,7 +341,7 @@ export async function generateAIBenchmarkAnalysis(
         period: { $lt: latestMetrics.period }
     }).sort({ period: -1 });
 
-    // Get all startups in same sector for peer comparison
+    
     const sectorStartups = await StartupProfile.find({ sector: profile.sector });
     const peerIds = sectorStartups.map(s => s._id);
 
@@ -377,7 +377,7 @@ export async function generateAIBenchmarkAnalysis(
     const avgBurn = burns.length > 0 ? burns.reduce((a, b) => a + b, 0) / burns.length : 0;
     const avgChurn = churns.length > 0 ? churns.reduce((a, b) => a + b, 0) / churns.length : 0;
 
-    // ─── AI ANALYSIS ────────────────────────────────────────────────────
+    
 
     const aiPrompt = `You are an expert startup benchmarking analyst. Analyze this startup's position relative to its peers.
 
@@ -447,7 +447,7 @@ Be specific with numbers. Reference percentiles and actual values.`;
         }
     }
 
-    // Build strengths/weaknesses from percentiles (rule-based fallback)
+    
     const metricAnalysis = [
         { metric: 'Revenue', pct: percentiles.revenue, own: latestMetrics.financial.revenue, avg: avgRevenue, lowerBetter: false },
         { metric: 'Active Users', pct: percentiles.users, own: latestMetrics.operational.activeUsers, avg: avgUsers, lowerBetter: false },
@@ -490,7 +490,7 @@ Be specific with numbers. Reference percentiles and actual values.`;
         isAIPowered
     };
 
-    // ─── PERSIST TO CACHE ──────────────────────────────────────────────
+    
     try {
         await AnalysisCache.findOneAndUpdate(
             { startupId, cacheType: 'benchmark' },
@@ -513,7 +513,7 @@ Be specific with numbers. Reference percentiles and actual values.`;
     return result;
 }
 
-// ─── RULE-BASED FALLBACKS ──────────────────────────────────────────────
+
 
 function generateRuleBasedTrend(metrics: any[]): string {
     if (metrics.length < 2) return 'Insufficient data for trend analysis.';

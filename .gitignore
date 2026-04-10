@@ -1,6 +1,4 @@
-# =============================================
-# ROOT-LEVEL .gitignore
-# =============================================
+
 
 # Environment variables (NEVER commit secrets!)
 .env

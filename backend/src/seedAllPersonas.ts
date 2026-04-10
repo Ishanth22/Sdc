@@ -1,14 +1,4 @@
-/**
- * seedAllPersonas.ts
- * Master seed — creates all 4 test personas with full mock data.
- *
- * Persona 1: founder1@nspms.in  — Arjun Mehta / NovaSaaS Technologies (SaaS, Series A) — healthy
- * Persona 2: founder2@nspms.in  — Priya Nair   / MedQuick Health (Healthtech, Seed)     — at-risk
- * Persona 3: investor@nspms.in  — Rohit Sharma  (Investor)
- * Persona 4: admin@nspms.in     — Sunita Das    (Admin)
- *
- * Run: npx ts-node src/seedAllPersonas.ts
- */
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -31,9 +21,6 @@ const MONGO_URI =
     process.env.MONGO_URI ||
     'mongodb+srv://lmelvindenish_db_user:melvindenish@cluster0.t5hb9cw.mongodb.net/nspms?appName=Cluster0';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPER
-// ─────────────────────────────────────────────────────────────────────────────
 async function upsertUser(
     email: string,
     name: string,
@@ -54,9 +41,6 @@ async function upsertUser(
     return user;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────────────────────────────────────
 async function seedAll() {
     console.log('🌱 Connecting to MongoDB...');
     await mongoose.connect(MONGO_URI);
@@ -64,9 +48,9 @@ async function seedAll() {
 
     const hash = await bcrypt.hash('password123', 10);
 
-    // =========================================================================
-    // PERSONA 3 & 4 — Investor + Admin (non-founder, just user records)
-    // =========================================================================
+    
+    
+    
     const investor = await upsertUser('investor@nspms.in', 'Rohit Sharma', 'investor', hash);
     await Subscription.findOneAndUpdate(
         { userId: investor._id }, { plan: 'enterprise' }, { upsert: true }
@@ -79,13 +63,13 @@ async function seedAll() {
     );
     console.log('✅ Admin:    admin@nspms.in / password123\n');
 
-    // =========================================================================
-    // PERSONA 1 — Arjun Mehta / NovaSaaS Technologies (SaaS, Series A)
-    // HEALTHY startup — all green metrics, great growth trajectory
-    // =========================================================================
+    
+    
+    
+    
     const arjun = await upsertUser('founder1@nspms.in', 'Arjun Mehta', 'founder', hash);
 
-    // Org
+    
     let arjunOrg = await Organization.findOne({ ownerId: arjun._id });
     if (!arjunOrg) {
         arjunOrg = await Organization.create({
@@ -98,7 +82,7 @@ async function seedAll() {
         await arjun.save();
     }
 
-    // Profile
+    
     let arjunProfile = await StartupProfile.findOne({ userId: arjun._id });
     if (!arjunProfile) {
         arjunProfile = await StartupProfile.create({ userId: arjun._id, companyName: 'NovaSaaS Technologies', cin: 'U72900KA2023PTC175421', sector: 'SaaS', stage: 'Series A', foundedDate: new Date('2023-03-01'), city: 'Bengaluru', teamSize: 45 });
@@ -119,14 +103,14 @@ async function seedAll() {
     await Subscription.findOneAndUpdate({ userId: arjun._id }, { plan: 'enterprise' }, { upsert: true });
     console.log('📊 Seeding Persona 1: NovaSaaS Technologies...');
 
-    // Clear old data
+    
     await Metrics.deleteMany({ startupId: arjunProfile._id });
     await Milestone.deleteMany({ startupId: arjunProfile._id });
     await CustomKPI.deleteMany({ startupId: arjunProfile._id });
     await VitalityScore.deleteMany({ startupId: arjunProfile._id });
     await Alert.deleteMany({ startupId: arjunProfile._id });
 
-    // 8 months of healthy metrics (Aug 2024 → Mar 2025)
+    
     const arjunMetrics = [
         { period: '2024-08', financial: { revenue: 180000, monthlyExpenses: 420000, burnRate: 240000, runwayMonths: 14, totalFunding: 3500000, fundingAmount: 3500000, fundingType: 'Equity', investorName: 'Accel India' }, operational: { activeUsers: 820, newUsers: 210, cac: 1800, ltv: 12000, churnRate: 6.2, gmv: 540000, citiesServed: 4 }, innovation: { patentsFiled: 1, patentsGranted: 0, trademarksFiled: 1, rndSpend: 55000 }, impact: { directJobs: 18, womenEmployees: 6, ruralEmployees: 2, exportsInr: 0 } },
         { period: '2024-09', financial: { revenue: 215000, monthlyExpenses: 435000, burnRate: 220000, runwayMonths: 13, totalFunding: 3500000, fundingAmount: 0, fundingType: 'None', investorName: '' }, operational: { activeUsers: 980, newUsers: 260, cac: 1650, ltv: 12800, churnRate: 5.8, gmv: 645000, citiesServed: 5 }, innovation: { patentsFiled: 1, patentsGranted: 0, trademarksFiled: 1, rndSpend: 60000 }, impact: { directJobs: 20, womenEmployees: 7, ruralEmployees: 2, exportsInr: 0 } },
@@ -143,7 +127,7 @@ async function seedAll() {
         process.stdout.write(`  ✅ NovaSaaS Metrics: ${m.period}\n`);
     }
 
-    // Milestones for Arjun
+    
     const arjunMilestones = [
         { title: 'Seed Funding Round Closed', description: 'Successfully raised ₹3.5Cr seed round from Accel India to accelerate product development and hiring.', category: 'funding', deadline: new Date('2024-08-31'), completionPercent: 100, completed: true, completedAt: new Date('2024-08-20'), isOKR: false, keyResults: [] },
         { title: 'Launch Mobile App (iOS + Android)', description: 'Ship beta version of mobile app to first 500 users and gather retention data.', category: 'product', deadline: new Date('2024-10-15'), completionPercent: 100, completed: true, completedAt: new Date('2024-10-12'), isOKR: false, keyResults: [] },
@@ -158,7 +142,7 @@ async function seedAll() {
     for (const m of arjunMilestones) await Milestone.create({ startupId: arjunProfile._id, ...m });
     console.log(`  ✅ NovaSaaS: ${arjunMilestones.length} milestones`);
 
-    // Custom KPIs for Arjun
+    
     const arjunPeriods = arjunMetrics.map(m => m.period);
     await CustomKPI.create({ startupId: arjunProfile._id, name: 'LTV/CAC Ratio', formula: 'ltv / cac', unit: 'x', description: 'Lifetime Value to Customer Acquisition Cost ratio. Target: >3x', values: arjunMetrics.map((m, i) => ({ period: arjunPeriods[i], value: parseFloat((m.operational.ltv / m.operational.cac).toFixed(2)) })) });
     await CustomKPI.create({ startupId: arjunProfile._id, name: 'Revenue per Employee', formula: 'revenue / teamSize', unit: '₹', description: 'Monthly revenue per full-time employee — measures team efficiency.', values: [18000, 21500, 27800, 34200, 41500, 49800, 57200, 64800].map((v, i) => ({ period: arjunPeriods[i], value: v })) });
@@ -166,10 +150,10 @@ async function seedAll() {
     await CustomKPI.create({ startupId: arjunProfile._id, name: 'NRR (Net Revenue Retention)', formula: '(revenue - churned + expansion) / prevRevenue', unit: '%', description: 'Net Revenue Retention. Target: >100%', values: [{ period: '2024-08', value: 94 }, { period: '2024-09', value: 102 }, { period: '2024-10', value: 108 }, { period: '2024-11', value: 112 }, { period: '2024-12', value: 116 }, { period: '2025-01', value: 119 }, { period: '2025-02', value: 122 }, { period: '2025-03', value: 124 }] });
     console.log('  ✅ NovaSaaS: 4 custom KPIs\n');
 
-    // =========================================================================
-    // PERSONA 2 — Priya Nair / MedQuick Health (Healthtech, Seed)
-    // AT-RISK startup — triggers all alerts, critical flags, overdue milestones
-    // =========================================================================
+    
+    
+    
+    
     console.log('📊 Seeding Persona 2: MedQuick Health...');
     const priya = await upsertUser('founder2@nspms.in', 'Priya Nair', 'founder', hash);
 
@@ -204,15 +188,15 @@ async function seedAll() {
     });
     await Subscription.findOneAndUpdate({ userId: priya._id }, { plan: 'free' }, { upsert: true });
 
-    // Clear old data
+    
     await Metrics.deleteMany({ startupId: priyaProfile._id });
     await Milestone.deleteMany({ startupId: priyaProfile._id });
     await CustomKPI.deleteMany({ startupId: priyaProfile._id });
     await VitalityScore.deleteMany({ startupId: priyaProfile._id });
     await Alert.deleteMany({ startupId: priyaProfile._id });
 
-    // 6 months of AT-RISK metrics (Oct 2024 → Mar 2025)
-    // Designed to trigger: low runway alert, high churn alert, LTV/CAC < 1 alert, revenue decline
+    
+    
     const priyaMetrics = [
         { period: '2024-10', financial: { revenue: 85000, monthlyExpenses: 210000, burnRate: 125000, runwayMonths: 12, totalFunding: 1500000, fundingAmount: 1500000, fundingType: 'Grant', investorName: 'BIRAC' }, operational: { activeUsers: 340, newUsers: 120, cac: 2200, ltv: 3800, churnRate: 14.5, gmv: 102000, citiesServed: 2 }, innovation: { patentsFiled: 0, patentsGranted: 0, trademarksFiled: 1, rndSpend: 18000 }, impact: { directJobs: 8, womenEmployees: 4, ruralEmployees: 5, exportsInr: 0 } },
         { period: '2024-11', financial: { revenue: 92000, monthlyExpenses: 215000, burnRate: 123000, runwayMonths: 10, totalFunding: 1500000, fundingAmount: 0, fundingType: 'None', investorName: '' }, operational: { activeUsers: 380, newUsers: 130, cac: 2100, ltv: 3600, churnRate: 15.2, gmv: 114000, citiesServed: 2 }, innovation: { patentsFiled: 0, patentsGranted: 0, trademarksFiled: 1, rndSpend: 20000 }, impact: { directJobs: 9, womenEmployees: 4, ruralEmployees: 5, exportsInr: 0 } },
@@ -227,7 +211,7 @@ async function seedAll() {
         process.stdout.write(`  ✅ MedQuick Metrics: ${m.period}\n`);
     }
 
-    // Milestones for Priya — many overdue, low completion
+    
     const priyaMilestones = [
         { title: 'BIRAC Grant Disbursement', description: 'Receive first tranche of ₹15L from BIRAC grant for rural healthtech pilot.', category: 'funding', deadline: new Date('2024-10-15'), completionPercent: 100, completed: true, completedAt: new Date('2024-10-10'), isOKR: false, keyResults: [] },
         { title: 'Onboard 500 Active Patients', description: 'Reach 500 monthly active patients within 3 months of launch.', category: 'market', deadline: new Date('2024-12-31'), completionPercent: 70, completed: false, isOKR: true, objectiveType: 'quarterly', keyResults: [{ title: 'Active Patients', target: 500, current: 350, unit: 'patients' }, { title: 'Consultation Completion Rate', target: 85, current: 71, unit: '%' }, { title: 'Repeat Patients', target: 60, current: 38, unit: '%' }] },
@@ -240,20 +224,20 @@ async function seedAll() {
     for (const m of priyaMilestones) await Milestone.create({ startupId: priyaProfile._id, ...m });
     console.log(`  ✅ MedQuick: ${priyaMilestones.length} milestones (4 overdue)`);
 
-    // Custom KPIs for Priya
+    
     const priyaPeriods = priyaMetrics.map(m => m.period);
     await CustomKPI.create({ startupId: priyaProfile._id, name: 'LTV/CAC Ratio', formula: 'ltv / cac', unit: 'x', description: 'Customer lifetime value vs acquisition cost. Target: >3x. Currently CRITICAL <1x.', values: priyaMetrics.map((m, i) => ({ period: priyaPeriods[i], value: parseFloat((m.operational.ltv / m.operational.cac).toFixed(2)) })) });
     await CustomKPI.create({ startupId: priyaProfile._id, name: 'Consultation Completion Rate', formula: 'completed_consults / booked_consults', unit: '%', description: 'Percentage of booked consultations that are completed. Target: >85%', values: [{ period: '2024-10', value: 72 }, { period: '2024-11', value: 69 }, { period: '2024-12', value: 65 }, { period: '2025-01', value: 61 }, { period: '2025-02', value: 58 }, { period: '2025-03', value: 54 }] });
     await CustomKPI.create({ startupId: priyaProfile._id, name: 'Doctor Utilization Rate', formula: 'total_consults / (doctors * working_hours)', unit: '%', description: 'How efficiently doctors are being used. Target: >70%', values: [{ period: '2024-10', value: 45 }, { period: '2024-11', value: 48 }, { period: '2024-12', value: 41 }, { period: '2025-01', value: 38 }, { period: '2025-02', value: 35 }, { period: '2025-03', value: 31 }] });
     console.log('  ✅ MedQuick: 3 custom KPIs\n');
 
-    // =========================================================================
-    // BENCHMARK DATA — for Investor comparison and AI Benchmarking tab
-    // =========================================================================
+    
+    
+    
     console.log('📊 Seeding benchmark data...');
     const benchmarkPeriods = ['2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03'];
 
-    // SaaS / Series A benchmarks
+    
     for (const period of benchmarkPeriods) {
         await Benchmark.findOneAndUpdate(
             { sector: 'SaaS', stage: 'Series A', period },
@@ -262,7 +246,7 @@ async function seedAll() {
         );
     }
 
-    // Healthtech / Seed benchmarks
+    
     for (const period of benchmarkPeriods) {
         await Benchmark.findOneAndUpdate(
             { sector: 'Healthtech', stage: 'Seed', period },
@@ -271,7 +255,7 @@ async function seedAll() {
         );
     }
 
-    // Additional sector benchmarks for investor dashboard filters
+    
     for (const period of benchmarkPeriods) {
         await Benchmark.findOneAndUpdate(
             { sector: 'Fintech', stage: 'Seed', period },
@@ -286,9 +270,9 @@ async function seedAll() {
     }
     console.log('  ✅ Benchmark data for SaaS/SeriesA + Healthtech/Seed + Fintech/Seed + Edtech/Early\n');
 
-    // =========================================================================
-    // SUMMARY
-    // =========================================================================
+    
+    
+    
     console.log('🎉 All personas seeded successfully!\n');
     console.log('─────────────────────────────────────────────────────');
     console.log('  CREDENTIALS (all passwords: password123)');

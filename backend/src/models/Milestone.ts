@@ -16,7 +16,7 @@ export interface IMilestone extends Document {
     completionPercent: number;
     completed: boolean;
     completedAt?: Date;
-    // OKR Support
+    
     isOKR: boolean;
     objectiveType?: 'quarterly' | 'annual' | 'custom';
     keyResults: IKeyResult[];
@@ -40,7 +40,7 @@ const MilestoneSchema = new Schema<IMilestone>({
         enum: ['product', 'funding', 'team', 'market', 'legal', 'other'],
         default: 'other'
     },
-    deadline: { type: Date, required: true },
+    deadline: { type: Date, required: false },
     completionPercent: { type: Number, default: 0, min: 0, max: 100 },
     completed: { type: Boolean, default: false },
     completedAt: { type: Date },

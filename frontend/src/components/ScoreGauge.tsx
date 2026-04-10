@@ -7,7 +7,7 @@ interface Props {
 
 const ScoreGauge: React.FC<Props> = ({ score, size = 180 }) => {
     const radius = (size - 20) / 2;
-    const circumference = radius * Math.PI; // half circle
+    const circumference = radius * Math.PI; 
     const progress = (score / 100) * circumference;
     const center = size / 2;
 
@@ -28,7 +28,7 @@ const ScoreGauge: React.FC<Props> = ({ score, size = 180 }) => {
     return (
         <div className="flex flex-col items-center">
             <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
-                {/* Background arc */}
+                {}
                 <path
                     d={`M 10 ${center} A ${radius} ${radius} 0 0 1 ${size - 10} ${center}`}
                     fill="none"
@@ -36,7 +36,7 @@ const ScoreGauge: React.FC<Props> = ({ score, size = 180 }) => {
                     strokeWidth="12"
                     strokeLinecap="round"
                 />
-                {/* Progress arc */}
+                {}
                 <path
                     d={`M 10 ${center} A ${radius} ${radius} 0 0 1 ${size - 10} ${center}`}
                     fill="none"
@@ -47,7 +47,7 @@ const ScoreGauge: React.FC<Props> = ({ score, size = 180 }) => {
                     className="transition-all duration-1000 ease-out"
                     style={{ filter: `drop-shadow(0 0 8px ${getColor()}40)` }}
                 />
-                {/* Score text */}
+                {}
                 <text x={center} y={center - 10} textAnchor="middle" className="fill-white text-3xl font-bold" style={{ fontSize: '36px', fontWeight: 800 }}>
                     {score}
                 </text>

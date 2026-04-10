@@ -4,7 +4,7 @@ import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET /api/subscription – get current plan
+
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         let sub = await Subscription.findOne({ userId: req.user!._id });
@@ -18,7 +18,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/subscription/plans – list all plans and features
+
 router.get('/plans', async (_req, res: Response) => {
     res.json({
         plans: [
@@ -50,7 +50,7 @@ router.get('/plans', async (_req, res: Response) => {
     });
 });
 
-// PUT /api/subscription/upgrade – change plan (admin or self)
+
 router.put('/upgrade', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { plan } = req.body;
@@ -69,7 +69,7 @@ router.put('/upgrade', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// PUT /api/subscription/admin/:userId – admin can change any user's plan
+
 router.put('/admin/:userId', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { plan } = req.body;

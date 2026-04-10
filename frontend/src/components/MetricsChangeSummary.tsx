@@ -26,7 +26,6 @@ function formatVal(val: number, format?: string, unit?: string): string {
     return `${val.toLocaleString('en-IN')}${unit ? ' ' + unit : ''}`;
 }
 
-/* Animated counting number */
 const CountUp: React.FC<{ from: number; to: number; format?: string; unit?: string; duration?: number }> = ({
     from, to, format, unit, duration = 1200
 }) => {
@@ -46,7 +45,6 @@ const CountUp: React.FC<{ from: number; to: number; format?: string; unit?: stri
     return <>{formatVal(display, format, unit)}</>;
 };
 
-/* Single floating particle */
 const Particle: React.FC<{ x: number; color: string; delay: number; size: number }> = ({ x, color, delay, size }) => (
     <div style={{
         position: 'absolute', left: `${x}%`, bottom: 0,
@@ -132,7 +130,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                 .mcs-scroll { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            {/* ── Full-screen backdrop ── */}
+            {}
             <div style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
                 background: 'rgba(5,8,22,0.90)',
@@ -143,12 +141,12 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                 padding: '20px 16px',
                 overflowY: 'auto',
             }}>
-                {/* Floating particles (behind card) */}
+                {}
                 <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
                     {particles.map((p, i) => <Particle key={i} {...p} />)}
                 </div>
 
-                {/* ── Card ── */}
+                {}
                 <div style={{
                     ...cardStyle,
                     position: 'relative',
@@ -163,7 +161,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                     flexDirection: 'column',
                     maxHeight: '90vh',
                 }}>
-                    {/* Shimmer top bar */}
+                    {}
                     <div style={{
                         position: 'absolute', top: 0, left: 0, right: 0, height: 3,
                         background: 'linear-gradient(90deg, #6366f1, #a855f7, #06b6d4, #6366f1)',
@@ -173,7 +171,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                         flexShrink: 0,
                     }} />
 
-                    {/* ── Header (always visible) ── */}
+                    {}
                     <div style={{ padding: '28px 28px 16px', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                             <div style={{ minWidth: 0 }}>
@@ -191,7 +189,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                                     {changes.filter(c => c.to !== c.from).length} metrics changed · {unchanged.length} unchanged
                                 </p>
                             </div>
-                            {/* Countdown ring */}
+                            {}
                             <div style={{ position: 'relative', flexShrink: 0 }}>
                                 <svg width={52} height={52} style={{ transform: 'rotate(-90deg)' }}>
                                     <circle cx={26} cy={26} r={22} fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth={3} />
@@ -208,13 +206,13 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                         </div>
                     </div>
 
-                    {/* ── Scrollable body ── */}
+                    {}
                     <div className="mcs-scroll" style={{ overflowY: 'auto', padding: '0 28px', flex: 1, minHeight: 0 }}>
 
-                        {/* Changes Grid */}
+                        {}
                         <div style={{ display: 'grid', gridTemplateColumns: increased.length > 0 && decreased.length > 0 ? '1fr 1fr' : '1fr', gap: 16 }}>
 
-                            {/* ── Increased ── */}
+                            {}
                             {increased.length > 0 && (
                                 <div>
                                     <div style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -248,7 +246,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                                 </div>
                             )}
 
-                            {/* ── Decreased ── */}
+                            {}
                             {decreased.length > 0 && (
                                 <div>
                                     <div style={{ fontSize: 11, fontWeight: 700, color: '#f87171', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -283,7 +281,7 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                             )}
                         </div>
 
-                        {/* Verdict */}
+                        {}
                         {(increased.length > 0 || decreased.length > 0) && (
                             <div style={{ marginTop: 16, marginBottom: 4, background: increased.length >= decreased.length ? 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(99,102,241,0.1))' : 'linear-gradient(135deg, rgba(248,113,113,0.1), rgba(99,102,241,0.1))', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12, padding: '12px 16px', animation: 'rowSlideIn 0.5s ease 0.7s both' }}>
                                 <span style={{ fontSize: 13, color: '#c4b5fd' }}>
@@ -293,9 +291,9 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                                 </span>
                             </div>
                         )}
-                    </div>{/* end scrollable body */}
+                    </div>{}
 
-                    {/* ── Footer (always visible) ── */}
+                    {}
                     <div style={{ padding: '16px 28px 24px', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
                         <button onClick={onDone} style={{
                             padding: '10px 28px',
@@ -313,8 +311,8 @@ const MetricsChangeSummary: React.FC<Props> = ({ changes, period, isUpdate, onDo
                         </button>
                     </div>
 
-                </div>{/* end card */}
-            </div>{/* end backdrop */}
+                </div>{}
+            </div>{}
         </>
     );
 };

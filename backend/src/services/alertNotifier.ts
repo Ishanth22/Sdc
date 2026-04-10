@@ -6,7 +6,6 @@ import Alert, { IAlert } from '../models/Alert';
 import StartupProfile from '../models/StartupProfile';
 import User from '../models/User';
 
-// ─── Email Transport ──────────────────────────────────────────────────────────
 function getEmailTransport() {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null;
     return nodemailer.createTransport({
@@ -15,13 +14,11 @@ function getEmailTransport() {
     });
 }
 
-// ─── Twilio SMS ───────────────────────────────────────────────────────────────
 function getSmsClient() {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return null;
     return twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 }
 
-// ─── Send notification (email + SMS) ─────────────────────────────────────────
 async function sendNotification(
     toEmail: string | undefined,
     toPhone: string | undefined,
@@ -31,7 +28,7 @@ async function sendNotification(
 ) {
     const errors: string[] = [];
 
-    // Email
+    
     if (toEmail) {
         const transporter = getEmailTransport();
         if (transporter) {
@@ -51,7 +48,7 @@ async function sendNotification(
         }
     }
 
-    // SMS
+    
     if (toPhone) {
         const client = getSmsClient();
         if (client && process.env.TWILIO_PHONE_NUMBER) {
@@ -72,7 +69,6 @@ async function sendNotification(
     return errors;
 }
 
-// ─── HTML email template ──────────────────────────────────────────────────────
 function buildEmailHtml(severity: string, title: string, message: string, period: string, startupName: string): string {
     const colors: Record<string, string> = { critical: '#ef4444', warning: '#f59e0b', info: '#6366f1' };
     const color = colors[severity] || '#6366f1';
@@ -100,7 +96,6 @@ function buildEmailHtml(severity: string, title: string, message: string, period
 </html>`;
 }
 
-// ─── Core alert checker ───────────────────────────────────────────────────────
 export async function checkAndSendAlerts(
     startupId: mongoose.Types.ObjectId | string,
     period: string
@@ -111,10 +106,10 @@ export async function checkAndSendAlerts(
     const profile = await StartupProfile.findById(startupId) as any;
     if (!profile) return [];
 
-    // alertsEnabled check
+    
     if (profile.alertsEnabled === false) return [];
 
-    // Use alertEmail (user-configured) — fall back to login email
+    
     const user = await User.findById(profile.userId);
     const toEmail = profile.alertEmail || user?.email;
     const toPhone = profile.alertPhone || undefined;
@@ -130,13 +125,13 @@ export async function checkAndSendAlerts(
     const curRunway = curBurn > 0 ? Math.round(curCash / curBurn) : (curCash > 0 ? 999 : 0);
     const curChurn = latest.operational.churnRate || 0;
 
-    // Check if a DB alert of this type already exists (to avoid duplicate documents)
+    
     const alertDocExists = async (type: string, withinDays = 7) => {
         const since = new Date(Date.now() - withinDays * 86400000);
         return !!(await Alert.findOne({ startupId, type, dismissed: false, createdAt: { $gte: since } }));
     };
 
-    // Check if email for this alert type was sent in the last 24 hours (to avoid spam)
+    
     const emailSentRecently = async (type: string) => {
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
         return !!(await Alert.findOne({ startupId, type, createdAt: { $gte: since } }));
@@ -148,10 +143,10 @@ export async function checkAndSendAlerts(
         title: string,
         message: string
     ) => {
-        // Always send email if NOT sent in last 24h (prevents spam but always notifies on re-submit)
+        
         const skipEmail = await emailSentRecently(type);
 
-        // Only create a new DB alert document if none exists in last 7 days
+        
         let alert: IAlert | null = null;
         if (!(await alertDocExists(type))) {
             alert = await Alert.create({ startupId, type, severity, title, message, period, dismissed: false });
@@ -159,7 +154,7 @@ export async function checkAndSendAlerts(
             console.log(`[Alert] Created DB alert: ${type}`);
         }
 
-        // Send email notification (unless already sent in last 24h)
+        
         if (!skipEmail) {
             console.log(`[Alert] Sending email for ${type} to ${toEmail}`);
             const text = `🚨 NSPMS Alert [${severity.toUpperCase()}]\n${title}\n${message}\nPeriod: ${period}`;
@@ -171,7 +166,7 @@ export async function checkAndSendAlerts(
         return alert;
     };
 
-    // ── Rule 1: Runway < 6 months ────────────────────────────────────────────
+    
     if (curRunway > 0 && curRunway < 6) {
         const severity: IAlert['severity'] = curRunway <= 2 ? 'critical' : 'warning';
         await handleAlert(
@@ -181,7 +176,7 @@ export async function checkAndSendAlerts(
         );
     }
 
-    // ── Rule 2: Burn rate increasing 3 months in a row ──────────────────────
+    
     if (allMetrics.length >= 3) {
         const last3 = allMetrics.slice(-3);
         const burns = last3.map(m => {
@@ -199,7 +194,7 @@ export async function checkAndSendAlerts(
         }
     }
 
-    // ── Rule 3: Churn > 15% ──────────────────────────────────────────────────
+    
     if (curChurn > 15) {
         const severity: IAlert['severity'] = curChurn > 25 ? 'critical' : 'warning';
         await handleAlert(
@@ -209,7 +204,7 @@ export async function checkAndSendAlerts(
         );
     }
 
-    // ── Rule 4: Revenue dropped more than 20% MoM ───────────────────────────
+    
     if (allMetrics.length >= 2) {
         const prev = allMetrics[allMetrics.length - 2];
         const prevRevenue = prev.financial.revenue || 0;
@@ -226,7 +221,6 @@ export async function checkAndSendAlerts(
     return newAlerts;
 }
 
-// ─── Send a test alert (for settings page) ───────────────────────────────────
 export async function sendTestAlert(toEmail?: string, toPhone?: string): Promise<{ ok: boolean; errors: string[] }> {
     const text = '✅ NSPMS Alert test successful! You will now receive real-time alerts when critical thresholds are crossed.';
     const html = buildEmailHtml('info', '✅ Test Alert — NSPMS', text, 'Test', 'Your Startup');

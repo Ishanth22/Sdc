@@ -1,7 +1,4 @@
-/**
- * Seed script — creates demo accounts: founder, investor, admin
- * Run with: npx ts-node src/seed.ts
- */
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -22,7 +19,7 @@ async function seed() {
 
     const passwordHash = await bcrypt.hash('password123', 10);
 
-    // ─── 1. FOUNDER ────────────────────────────────────────────────────
+    
     let founder = await User.findOne({ email: 'founder1@nspms.in' });
     if (!founder) {
         founder = await User.create({
@@ -58,7 +55,7 @@ async function seed() {
         await Subscription.create({ userId: founder._id, plan: 'free' });
         console.log('✅ Founder created: founder1@nspms.in / password123');
     } else {
-        // Unlock account if it was locked after failed attempts
+        
         founder.failedLoginAttempts = 0;
         founder.lockedUntil = undefined;
         founder.passwordHash = passwordHash;
@@ -66,7 +63,7 @@ async function seed() {
         console.log('♻️  Founder already exists — password reset & unlocked: founder1@nspms.in');
     }
 
-    // ─── 2. INVESTOR ───────────────────────────────────────────────────
+    
     let investor = await User.findOne({ email: 'investor@nspms.in' });
     if (!investor) {
         await User.create({
@@ -85,7 +82,7 @@ async function seed() {
         console.log('♻️  Investor already exists — password reset & unlocked: investor@nspms.in');
     }
 
-    // ─── 3. ADMIN ──────────────────────────────────────────────────────
+    
     let admin = await User.findOne({ email: 'admin@nspms.in' });
     if (!admin) {
         await User.create({

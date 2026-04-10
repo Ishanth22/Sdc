@@ -6,10 +6,10 @@ import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// All admin routes require authentication + admin role
+
 router.use(authenticate, requireAdmin);
 
-// GET /api/admin/startups
+
 router.get('/startups', async (req: AuthRequest, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
@@ -29,7 +29,7 @@ router.get('/startups', async (req: AuthRequest, res: Response) => {
             .limit(limit)
             .sort({ createdAt: -1 });
 
-        // Attach latest vitality score to each startup
+        
         const enriched = await Promise.all(startups.map(async (s) => {
             const score = await VitalityScore.findOne({ startupId: s._id }).sort({ period: -1 });
             return {
@@ -45,7 +45,7 @@ router.get('/startups', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/admin/startup/:id
+
 router.get('/startup/:id', async (req: AuthRequest, res: Response) => {
     try {
         const startup = await StartupProfile.findById(req.params.id);
@@ -62,7 +62,7 @@ router.get('/startup/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/admin/aggregates?by=sector
+
 router.get('/aggregates', async (req: AuthRequest, res: Response) => {
     try {
         const groupBy = (req.query.by as string) || 'sector';
@@ -73,7 +73,7 @@ router.get('/aggregates', async (req: AuthRequest, res: Response) => {
             { $sort: { count: -1 } }
         ]);
 
-        // Get total funding and revenue from latest metrics
+        
         const allStartups = await StartupProfile.find();
         let totalFunding = 0;
         let totalRevenue = 0;
@@ -104,7 +104,7 @@ router.get('/aggregates', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/admin/heatmap
+
 router.get('/heatmap', async (_req: AuthRequest, res: Response) => {
     try {
         const cityAgg = await StartupProfile.aggregate([

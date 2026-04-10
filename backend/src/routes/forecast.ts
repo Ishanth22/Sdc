@@ -5,7 +5,7 @@ import { generateForecasts } from '../services/forecasting';
 
 const router = Router();
 
-// GET /api/forecast – 6-month revenue & runway forecasting
+
 router.get('/', authenticate, requireFeature('forecasting'), async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

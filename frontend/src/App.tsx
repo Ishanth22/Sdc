@@ -25,7 +25,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Login />} />
 
-      {/* Founder Routes */}
+      {}
       <Route path="/dashboard" element={
         <ProtectedRoute requiredRole="founder"><Dashboard /></ProtectedRoute>
       } />
@@ -66,12 +66,12 @@ function AppRoutes() {
         <ProtectedRoute requiredRole="founder"><AlertSettings /></ProtectedRoute>
       } />
 
-      {/* Investor Routes */}
+      {}
       <Route path="/investor" element={
         <ProtectedRoute requiredRole="investor"><InvestorDashboard /></ProtectedRoute>
       } />
 
-      {/* Admin Routes */}
+      {}
       <Route path="/admin" element={
         <ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>
       } />

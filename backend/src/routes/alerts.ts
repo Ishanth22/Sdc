@@ -6,7 +6,6 @@ import { sendTestAlert } from '../services/alertNotifier';
 
 const router = Router();
 
-// GET /api/alerts – get all alerts (active or all)
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -23,7 +22,6 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// PUT /api/alerts/:id/dismiss
 router.put('/:id/dismiss', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -41,7 +39,6 @@ router.put('/:id/dismiss', authenticate, async (req: AuthRequest, res: Response)
     }
 });
 
-// PUT /api/alerts/dismiss-all
 router.put('/dismiss-all', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -53,7 +50,6 @@ router.put('/dismiss-all', authenticate, async (req: AuthRequest, res: Response)
     }
 });
 
-// GET /api/alerts/settings – get current alert contact settings
 router.get('/settings', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -68,7 +64,6 @@ router.get('/settings', authenticate, async (req: AuthRequest, res: Response) =>
     }
 });
 
-// PUT /api/alerts/settings – save phone/email for alerts
 router.put('/settings', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { alertPhone, alertEmail, alertsEnabled } = req.body;
@@ -84,7 +79,6 @@ router.put('/settings', authenticate, async (req: AuthRequest, res: Response) =>
     }
 });
 
-// POST /api/alerts/test – send a test notification right now
 router.post('/test', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

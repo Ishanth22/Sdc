@@ -5,16 +5,7 @@ import Benchmark from '../models/Benchmark';
 import Alert from '../models/Alert';
 import mongoose from 'mongoose';
 
-/**
- * Calculate Vitality/Health Score for a startup based on its latest metrics.
- * 
- * Health Score weights (matches requirements):
- * - Revenue Growth (25%)
- * - User Growth (20%)
- * - Burn Efficiency (20%)
- * - Churn Stability (15%)
- * - Runway Stability (20%)
- */
+
 export async function calculateVitalityScore(
     startupId: mongoose.Types.ObjectId | string,
     period: string
@@ -25,35 +16,35 @@ export async function calculateVitalityScore(
     const metrics = await Metrics.findOne({ startupId, period });
     if (!metrics) throw new Error('Metrics not found for this period');
 
-    // Get benchmark for comparison
+    
     const benchmark = await Benchmark.findOne({ sector: startup.sector, stage: startup.stage, period });
 
-    // Get previous period metrics for growth calculations
+    
     const prevPeriod = getPreviousPeriod(period);
     const prevMetrics = await Metrics.findOne({ startupId, period: prevPeriod });
 
-    // Get 2 months back for trend analysis
+    
     const prev2Period = getPreviousPeriod(prevPeriod);
     const prev2Metrics = await Metrics.findOne({ startupId, period: prev2Period });
 
-    // ---- COMPONENT SCORES (0-100) ----
+    
 
-    // 1. Revenue Growth Score (25%)
+    
     const revenueGrowthScore = calcRevenueGrowthScore(metrics, prevMetrics, benchmark);
 
-    // 2. User Growth Score (20%)
+    
     const userGrowthScore = calcUserGrowthScore(metrics, prevMetrics, benchmark);
 
-    // 3. Burn Efficiency Score (20%)
+    
     const burnEfficiencyScore = calcBurnEfficiencyScore(metrics, benchmark);
 
-    // 4. Churn Stability Score (15%)
+    
     const churnStabilityScore = calcChurnStabilityScore(metrics, prevMetrics);
 
-    // 5. Runway Stability Score (20%)
+    
     const runwayStabilityScore = calcRunwayStabilityScore(metrics);
 
-    // Weighted Health Score
+    
     const score = Math.round(
         revenueGrowthScore * 0.25 +
         userGrowthScore * 0.20 +
@@ -62,23 +53,23 @@ export async function calculateVitalityScore(
         runwayStabilityScore * 0.20
     );
 
-    // ---- RISK FLAGS & RISK LEVEL ----
+    
     const riskFlags: string[] = [];
     let riskPoints = 0;
 
-    // Runway < 6 months
+    
     if (metrics.financial.runwayMonths > 0 && metrics.financial.runwayMonths < 6) {
         riskFlags.push('Low runway (< 6 months)');
         riskPoints += 3;
     }
 
-    // Churn > 15%
+    
     if (metrics.operational.churnRate > 15) {
         riskFlags.push(`High churn rate (${metrics.operational.churnRate}%)`);
         riskPoints += 2;
     }
 
-    // Revenue growth negative 2+ months
+    
     if (prevMetrics && prev2Metrics) {
         const growthCurrent = prevMetrics.financial.revenue > 0
             ? ((metrics.financial.revenue - prevMetrics.financial.revenue) / prevMetrics.financial.revenue) * 100 : 0;
@@ -90,7 +81,7 @@ export async function calculateVitalityScore(
         }
     }
 
-    // Burn rate increasing rapidly
+    
     if (prevMetrics && prevMetrics.financial.burnRate > 0) {
         const burnIncrease = ((metrics.financial.burnRate - prevMetrics.financial.burnRate) / prevMetrics.financial.burnRate) * 100;
         if (burnIncrease > 30) {
@@ -99,7 +90,7 @@ export async function calculateVitalityScore(
         }
     }
 
-    // Revenue drop > 10%
+    
     if (prevMetrics && prevMetrics.financial.revenue > 0) {
         const revDrop = ((prevMetrics.financial.revenue - metrics.financial.revenue) / prevMetrics.financial.revenue) * 100;
         if (revDrop > 10) {
@@ -108,27 +99,27 @@ export async function calculateVitalityScore(
         }
     }
 
-    // High burn rate vs industry
+    
     if (benchmark && metrics.financial.burnRate > benchmark.metrics.avgBurnRate * 2) {
         riskFlags.push('High burn rate (> 2x industry average)');
         riskPoints += 1;
     }
 
-    // Poor unit economics
+    
     if (metrics.operational.ltv > 0 && metrics.operational.cac > 0 &&
         metrics.operational.ltv / metrics.operational.cac < 3) {
         riskFlags.push('Poor unit economics (LTV/CAC < 3)');
         riskPoints += 1;
     }
 
-    // ---- RISK LEVEL ----
+    
     let riskLevel: string;
     if (riskPoints >= 7) riskLevel = 'Critical';
     else if (riskPoints >= 4) riskLevel = 'High';
     else if (riskPoints >= 2) riskLevel = 'Moderate';
     else riskLevel = 'Low';
 
-    // ---- SCORE EXPLANATION ----
+    
     const explanation: string[] = [];
     if (revenueGrowthScore >= 70) explanation.push('Strong revenue growth is boosting your score significantly.');
     else if (revenueGrowthScore < 40) explanation.push('Low or negative revenue growth is dragging your score down.');
@@ -150,7 +141,7 @@ export async function calculateVitalityScore(
     else if (score >= 40) explanation.unshift('🟠 Moderate health — several metrics need attention.');
     else explanation.unshift('🔴 Your startup needs immediate attention in multiple areas.');
 
-    // ---- FUNDING READINESS ----
+    
     const fundingReadiness = calcFundingReadiness(metrics, prevMetrics, startup, riskLevel);
 
     const components = {
@@ -158,7 +149,7 @@ export async function calculateVitalityScore(
         operational: Math.round(userGrowthScore),
         innovation: Math.round(burnEfficiencyScore),
         impact: Math.round(churnStabilityScore),
-        // Additional breakdown
+        
         revenueGrowth: Math.round(revenueGrowthScore),
         userGrowth: Math.round(userGrowthScore),
         burnEfficiency: Math.round(burnEfficiencyScore),
@@ -168,11 +159,11 @@ export async function calculateVitalityScore(
 
     const finalScore = Math.min(100, Math.max(0, score));
 
-    // Delete existing score for this period and re-insert fresh
+    
     await VitalityScore.deleteOne({ startupId, period });
     await VitalityScore.create({ startupId, period, score: finalScore, components, riskFlags });
 
-    // Generate alerts
+    
     await generateAlerts(startupId, period, riskFlags, riskLevel, metrics, prevMetrics);
 
     return { score: finalScore, components, riskFlags, riskLevel, explanation, fundingReadiness };
@@ -184,7 +175,7 @@ function calcRevenueGrowthScore(m: IMetrics, prev: IMetrics | null, bm: any): nu
     if (m.financial.revenue > 500000) score += 10;
     if (m.financial.revenue > 2000000) score += 5;
 
-    // Month-over-month growth
+    
     if (prev && prev.financial.revenue > 0) {
         const growth = ((m.financial.revenue - prev.financial.revenue) / prev.financial.revenue) * 100;
         if (growth > 20) score += 20;
@@ -194,7 +185,7 @@ function calcRevenueGrowthScore(m: IMetrics, prev: IMetrics | null, bm: any): nu
         else if (growth < 0) score -= 5;
     }
 
-    // vs benchmark
+    
     if (bm && bm.metrics.avgRevenue > 0) {
         const ratio = m.financial.revenue / bm.metrics.avgRevenue;
         score += Math.min(10, Math.max(-10, (ratio - 1) * 15));
@@ -209,7 +200,7 @@ function calcUserGrowthScore(m: IMetrics, prev: IMetrics | null, bm: any): numbe
     if (m.operational.activeUsers > 10000) score += 10;
     if (m.operational.newUsers > 0) score += 10;
 
-    // MoM user growth
+    
     if (prev && prev.operational.activeUsers > 0) {
         const growth = ((m.operational.activeUsers - prev.operational.activeUsers) / prev.operational.activeUsers) * 100;
         if (growth > 15) score += 20;
@@ -225,7 +216,7 @@ function calcUserGrowthScore(m: IMetrics, prev: IMetrics | null, bm: any): numbe
 function calcBurnEfficiencyScore(m: IMetrics, bm: any): number {
     let score = 50;
 
-    // Revenue / Burn Rate ratio (higher is better)
+    
     if (m.financial.burnRate > 0) {
         const ratio = m.financial.revenue / m.financial.burnRate;
         if (ratio >= 2) score += 25;
@@ -234,7 +225,7 @@ function calcBurnEfficiencyScore(m: IMetrics, bm: any): number {
         else score -= 10;
     }
 
-    // LTV/CAC ratio
+    
     if (m.operational.cac > 0 && m.operational.ltv > 0) {
         const ltvCac = m.operational.ltv / m.operational.cac;
         if (ltvCac >= 5) score += 20;
@@ -242,7 +233,7 @@ function calcBurnEfficiencyScore(m: IMetrics, bm: any): number {
         else score -= 5;
     }
 
-    // vs benchmark burn rate
+    
     if (bm && bm.metrics.avgBurnRate > 0) {
         const ratio = m.financial.burnRate / bm.metrics.avgBurnRate;
         if (ratio <= 0.7) score += 10;
@@ -253,7 +244,7 @@ function calcBurnEfficiencyScore(m: IMetrics, bm: any): number {
 }
 
 function calcChurnStabilityScore(m: IMetrics, prev: IMetrics | null): number {
-    let score = 70; // Start optimistic
+    let score = 70; 
 
     const churn = m.operational.churnRate || 0;
     if (churn <= 3) score += 20;
@@ -262,7 +253,7 @@ function calcChurnStabilityScore(m: IMetrics, prev: IMetrics | null): number {
     else if (churn <= 15) score -= 15;
     else score -= 30;
 
-    // Churn increasing
+    
     if (prev) {
         const prevChurn = prev.operational.churnRate || 0;
         if (churn > prevChurn + 3) score -= 15;
@@ -280,22 +271,19 @@ function calcRunwayStabilityScore(m: IMetrics): number {
     if (runway >= 6) return 50;
     if (runway >= 3) return 30;
     if (runway > 0) return 15;
-    return 50; // Unknown runway
+    return 50; 
 }
 
-/**
- * Funding Readiness Score (0–100)
- * Based on: revenue consistency, growth rate, team size, market traction, risk level
- */
+
 function calcFundingReadiness(m: IMetrics, prev: IMetrics | null, startup: any, riskLevel: string): number {
     let score = 0;
 
-    // Revenue consistency (25%)
+    
     if (m.financial.revenue > 0) score += 15;
     if (m.financial.revenue > 500000) score += 5;
     if (m.financial.revenue > 2000000) score += 5;
 
-    // Growth rate (25%)
+    
     if (prev && prev.financial.revenue > 0) {
         const growth = ((m.financial.revenue - prev.financial.revenue) / prev.financial.revenue) * 100;
         if (growth > 15) score += 25;
@@ -303,28 +291,26 @@ function calcFundingReadiness(m: IMetrics, prev: IMetrics | null, startup: any, 
         else if (growth > 0) score += 8;
     }
 
-    // Team size (15%)
+    
     if (startup.teamSize >= 50) score += 15;
     else if (startup.teamSize >= 20) score += 10;
     else if (startup.teamSize >= 5) score += 5;
 
-    // Market traction (20%)
+    
     if (m.operational.activeUsers > 10000) score += 20;
     else if (m.operational.activeUsers > 1000) score += 12;
     else if (m.operational.activeUsers > 100) score += 5;
 
-    // Risk level penalty (15%)
+    
     if (riskLevel === 'Low') score += 15;
     else if (riskLevel === 'Moderate') score += 8;
     else if (riskLevel === 'High') score += 2;
-    // Critical = 0
+    
 
     return Math.min(100, Math.max(0, score));
 }
 
-/**
- * Generate smart alerts based on metric analysis
- */
+
 async function generateAlerts(
     startupId: mongoose.Types.ObjectId | string,
     period: string,
@@ -333,12 +319,12 @@ async function generateAlerts(
     metrics: IMetrics,
     prevMetrics: IMetrics | null
 ): Promise<void> {
-    // Remove old alerts for this period to avoid duplicates
+    
     await Alert.deleteMany({ startupId, period });
 
     const alerts: any[] = [];
 
-    // Runway alert
+    
     if (metrics.financial.runwayMonths > 0 && metrics.financial.runwayMonths < 6) {
         alerts.push({
             startupId, period,
@@ -349,7 +335,7 @@ async function generateAlerts(
         });
     }
 
-    // Burn rate spike
+    
     if (prevMetrics && prevMetrics.financial.burnRate > 0) {
         const burnIncrease = ((metrics.financial.burnRate - prevMetrics.financial.burnRate) / prevMetrics.financial.burnRate) * 100;
         if (burnIncrease > 30) {
@@ -363,7 +349,7 @@ async function generateAlerts(
         }
     }
 
-    // Revenue drop
+    
     if (prevMetrics && prevMetrics.financial.revenue > 0) {
         const revDrop = ((prevMetrics.financial.revenue - metrics.financial.revenue) / prevMetrics.financial.revenue) * 100;
         if (revDrop > 10) {
@@ -377,7 +363,7 @@ async function generateAlerts(
         }
     }
 
-    // Churn spike
+    
     if (metrics.operational.churnRate > 15) {
         alerts.push({
             startupId, period,
@@ -388,7 +374,7 @@ async function generateAlerts(
         });
     }
 
-    // Risk level alert
+    
     if (riskLevel === 'High' || riskLevel === 'Critical') {
         alerts.push({
             startupId, period,
@@ -410,13 +396,11 @@ function getPreviousPeriod(period: string): string {
     return `${y}-${String(m - 1).padStart(2, '0')}`;
 }
 
-/**
- * AI Advisor: Rule-based suggestions
- */
+
 export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, riskFlags: string[]): { question: string; answer: string }[] {
     const advice: { question: string; answer: string }[] = [];
 
-    // Runway
+    
     if (metrics.financial.runwayMonths > 0 && metrics.financial.runwayMonths < 9) {
         advice.push({
             question: "Why is my runway decreasing?",
@@ -427,7 +411,7 @@ export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, ris
         });
     }
 
-    // Churn
+    
     if (metrics.operational.churnRate > 5) {
         advice.push({
             question: "How can I reduce churn?",
@@ -435,7 +419,7 @@ export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, ris
         });
     }
 
-    // CAC/LTV
+    
     if (metrics.operational.cac > 0 && metrics.operational.ltv > 0 && metrics.operational.ltv / metrics.operational.cac < 3) {
         advice.push({
             question: "Why is my LTV/CAC ratio low?",
@@ -443,7 +427,7 @@ export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, ris
         });
     }
 
-    // Revenue
+    
     if (prevMetrics && prevMetrics.financial.revenue > 0) {
         const growth = ((metrics.financial.revenue - prevMetrics.financial.revenue) / prevMetrics.financial.revenue) * 100;
         if (growth < 0) {
@@ -454,7 +438,7 @@ export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, ris
         }
     }
 
-    // Burn rate
+    
     if (prevMetrics && prevMetrics.financial.burnRate > 0) {
         const burnIncrease = ((metrics.financial.burnRate - prevMetrics.financial.burnRate) / prevMetrics.financial.burnRate) * 100;
         if (burnIncrease > 20) {
@@ -465,7 +449,7 @@ export function getAIAdvice(metrics: IMetrics, prevMetrics: IMetrics | null, ris
         }
     }
 
-    // General positive advice
+    
     if (advice.length === 0) {
         advice.push({
             question: "How can I accelerate growth?",

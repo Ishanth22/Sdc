@@ -45,7 +45,7 @@ const History: React.FC = () => {
                 <h1 className="text-2xl font-bold text-white mb-2">History & Trends</h1>
                 <p className="text-sm text-slate-400 mb-6">View all your submitted metrics and score progression over time.</p>
 
-                {/* Score Trend Chart */}
+                {}
                 {scoreTrend.length > 0 && (
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6 mb-8">
                         <h3 className="text-sm font-semibold text-white mb-4">Vitality Score Trend</h3>
@@ -61,7 +61,7 @@ const History: React.FC = () => {
                     </div>
                 )}
 
-                {/* Metrics Table */}
+                {}
                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
@@ -109,7 +109,7 @@ const History: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Detail Panel */}
+                {}
                 {selected && (
                     <div className="mt-6 bg-slate-900/60 border border-indigo-500/20 rounded-xl p-6 animate-fade-in">
                         <h3 className="text-sm font-semibold text-white mb-4">Details for {selected.period}</h3>

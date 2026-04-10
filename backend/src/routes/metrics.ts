@@ -9,7 +9,7 @@ import { checkAndSendAlerts } from '../services/alertNotifier';
 
 const router = Router();
 
-// POST /api/metrics – submit or update metrics for a period
+// POST /metrics — Submit or update a month's metrics
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -20,8 +20,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         const now = new Date();
         const period = req.body.period || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-        // Delete existing entry for this period then re-insert fresh
-        // This guarantees all nested fields (financial, operational, etc.) are fully replaced
+        // Delete existing record for this period (upsert pattern)
         await Metrics.deleteOne({ startupId: profile._id, period });
 
         const metrics = await Metrics.create({
@@ -33,16 +32,24 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             impact:      req.body.impact      || {}
         });
 
-        // Recompute benchmarks
+        // Compute benchmarks
         try { await computeBenchmarks(period); } catch (_) {}
 
-        // Recalculate vitality score + alerts
+        // Recalculate score for the submitted period
         const scoreResult = await calculateVitalityScore(profile._id, period);
 
-        // Invalidate AI caches
+        // IMPORTANT: Also recalculate score for the LATEST period so the Dashboard
+        // always shows a fresh health score — even when an older historical month was edited.
+        // Without this, editing Feb data when the latest period is Mar would leave Mar's score stale.
+        const latestMetrics = await Metrics.findOne({ startupId: profile._id }).sort({ period: -1 });
+        if (latestMetrics && latestMetrics.period !== period) {
+            try { await calculateVitalityScore(profile._id, latestMetrics.period); } catch (_) {}
+        }
+
+        // Invalidate all forecast / risk / benchmark caches so new data is reflected
         await invalidateAllCaches(profile._id);
 
-        // Check alert conditions and send email/SMS — fire-and-forget
+        // Fire-and-forget alert notifications
         checkAndSendAlerts(profile._id, period).catch(e => console.error('[Alerts]', e.message));
 
         res.status(201).json({ metrics, vitalityScore: scoreResult });
@@ -51,7 +58,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     }
 });
 
-// GET /api/metrics/history
+// GET /metrics/history — All metrics sorted latest-first
 router.get('/history', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -67,27 +74,27 @@ router.get('/history', authenticate, async (req: AuthRequest, res: Response) => 
             if (to) query.period.$lte = to;
         }
 
-        const metrics = await Metrics.find(query).sort({ period: -1 });
-        res.json(metrics);
+        const metricsData = await Metrics.find(query).sort({ period: -1 });
+        res.json(metricsData);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// GET /api/metrics/period/:period – fetch metrics for a specific period
+// GET /metrics/period/:period — Metrics for a specific period
 router.get('/period/:period', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
         if (!profile) return res.status(404).json({ error: 'Startup profile not found' });
 
-        const metrics = await Metrics.findOne({ startupId: profile._id, period: req.params.period });
-        res.json(metrics || null);
+        const metricsData = await Metrics.findOne({ startupId: profile._id, period: req.params.period });
+        res.json(metricsData || null);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// GET /api/metrics/latest
+// GET /metrics/latest — Most recent metrics entry
 router.get('/latest', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

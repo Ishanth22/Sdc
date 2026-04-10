@@ -49,14 +49,14 @@ const Login: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-950 flex flex-col">
-            {/* Background decoration */}
+            {}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl animate-pulse" />
                 <div className="absolute top-1/2 -right-40 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
                 <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-cyan-600/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
             </div>
 
-            {/* Header */}
+            {}
             <header className="relative z-10 flex items-center justify-center pt-12 pb-6">
                 <div className="flex items-center gap-3">
                     <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-indigo-500/30">
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
                 </div>
             </header>
 
-            {/* Hero */}
+            {}
             <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 -mt-8">
                 <div className="text-center mb-8 max-w-2xl">
                     <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Auth Card */}
+                {}
                 <div className="w-full max-w-md">
                     <div className="bg-slate-900/70 backdrop-blur-xl border border-indigo-500/10 rounded-2xl p-8 shadow-2xl shadow-indigo-500/5">
                         <h3 className="text-xl font-bold text-white mb-1">
@@ -122,7 +122,7 @@ const Login: React.FC = () => {
                                             placeholder="Your full name" className={inputClass} />
                                     </div>
 
-                                    {/* Role Selection */}
+                                    {}
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">I am a</label>
                                         <div className="grid grid-cols-2 gap-2">

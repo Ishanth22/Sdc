@@ -13,8 +13,8 @@ const MetricsForm: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [isExisting, setIsExisting] = useState(false);
-    const [prevForm, setPrevForm] = useState<any>(null);      // snapshot before edit
-    const [summaryChanges, setSummaryChanges] = useState<any[] | null>(null); // popup data
+    const [prevForm, setPrevForm] = useState<any>(null);      
+    const [summaryChanges, setSummaryChanges] = useState<any[] | null>(null); 
 
     const emptyForm = {
         financial: { revenue: 0, monthlyExpenses: 0, burnRate: 0, cashOnHand: 0, runwayMonths: 0, totalFunding: 0, fundingAmount: 0, fundingType: 'None', investorName: '' },
@@ -24,7 +24,7 @@ const MetricsForm: React.FC = () => {
     };
     const [form, setForm] = useState(emptyForm);
 
-    // Helper: apply fetched data into form state
+    
     const applyData = (d: any) => {
         setForm({
             financial: { ...emptyForm.financial, ...d.financial },
@@ -34,14 +34,14 @@ const MetricsForm: React.FC = () => {
         });
     };
 
-    // On mount: load the latest metrics as the default pre-fill
+    
     useEffect(() => {
         api.get('/metrics/latest').then(res => {
             if (res.data) applyData(res.data);
         }).catch(() => { }).finally(() => setLoaded(true));
     }, []);
 
-    // When period changes: fetch that specific period's data (if it exists)
+    
     useEffect(() => {
         if (!loaded) return;
         setLoaded(false);
@@ -55,7 +55,7 @@ const MetricsForm: React.FC = () => {
                         impact: { ...emptyForm.impact, ...res.data.impact }
                     };
                     setForm(filled);
-                    setPrevForm(filled);   // ← save snapshot for diff
+                    setPrevForm(filled);   
                     setIsExisting(true);
                 } else {
                     setForm(emptyForm);
@@ -67,14 +67,14 @@ const MetricsForm: React.FC = () => {
             .finally(() => setLoaded(true));
     }, [period]);
 
-    // Auto-calculate Burn Rate AND Runway from Cash on Hand
+    
     useEffect(() => {
         if (!loaded) return;
         const expenses = form.financial.monthlyExpenses;
         const revenue  = form.financial.revenue;
-        const burnRate = Math.max(0, expenses - revenue); // burn = expenses − revenue
+        const burnRate = Math.max(0, expenses - revenue); 
         const cash     = form.financial.cashOnHand;
-        // runway = cash on hand / burn rate (only when burning money)
+        
         const runwayMonths = burnRate > 0 ? Math.round(cash / burnRate) : (cash > 0 ? 999 : 0);
 
         setForm(prev => ({
@@ -88,7 +88,8 @@ const MetricsForm: React.FC = () => {
         setSaving(true);
         try {
             await api.post('/metrics', { period, ...form });
-            // Build change list for popup
+            // Signal all pages that metrics data has changed
+            localStorage.setItem('metricsUpdatedAt', Date.now().toString());
             const prev = prevForm;
             const METRIC_DEFS: { label: string; path: [string, string]; format?: 'currency'|'percent'|'number'; unit?: string; higherIsBetter?: boolean }[] = [
                 { label: 'Revenue',      path: ['financial','revenue'],       format: 'currency', higherIsBetter: true  },
@@ -115,7 +116,7 @@ const MetricsForm: React.FC = () => {
                     unit: m.unit,
                     higherIsBetter: m.higherIsBetter,
                 }))
-                .filter(c => c.from !== c.to);  // only changed metrics
+                .filter(c => c.from !== c.to);  
             setSummaryChanges(changes.length > 0 ? changes : []);
         } catch (err: any) {
             alert(err.response?.data?.error || 'Failed to submit');
@@ -196,7 +197,7 @@ const MetricsForm: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    {/* Period selector */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5 mb-6">
                         <div className="flex items-center gap-4">
                             <div className="max-w-xs">
@@ -209,7 +210,7 @@ const MetricsForm: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Metric Sections */}
+                    {}
                     {sections.map(section => (
                         <div key={section.key} className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6 mb-4">
                             <h3 className="text-base font-semibold text-white mb-4">{section.title}</h3>
@@ -267,7 +268,7 @@ const MetricsForm: React.FC = () => {
                 changes={summaryChanges!}
                 period={period}
                 isUpdate={isExisting}
-                onDone={() => { setSummaryChanges(null); navigate('/dashboard'); }}
+                onDone={() => { setSummaryChanges(null); navigate('/dashboard', { state: { refresh: true } }); }}
             />
         )}
         </>

@@ -11,13 +11,9 @@ const MODEL = 'arcee-ai/trinity-large-preview:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 2000; // 2 seconds
+const BASE_DELAY_MS = 2000; 
 
-/**
- * Call OpenRouter API with google/gemma-3-27b-it:free model.
- * Includes automatic retry with exponential backoff for 429 rate limit errors.
- * Note: Gemma 3 doesn't support system instructions, so we combine them into user message.
- */
+
 async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
     const combinedPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
 
@@ -45,15 +41,15 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
             return data.choices?.[0]?.message?.content || '';
         }
 
-        // Handle rate limiting with retry
+        
         if (response.status === 429) {
             if (attempt < MAX_RETRIES) {
-                const delay = BASE_DELAY_MS * Math.pow(2, attempt); // 2s, 4s, 8s
+                const delay = BASE_DELAY_MS * Math.pow(2, attempt); 
                 console.log(`[AI Advisor] Rate limited (429). Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
-            // All retries exhausted
+            
             throw new Error(
                 'The AI model is temporarily rate-limited on the free tier. ' +
                 'Please wait 30-60 seconds and try again. ' +
@@ -61,7 +57,7 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
             );
         }
 
-        // Handle other errors
+        
         const errBody = await response.text();
         if (response.status === 400) {
             throw new Error('AI model request failed. The model may be temporarily unavailable. Please try again shortly.');
@@ -75,34 +71,31 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
     throw new Error('AI service temporarily unavailable. Please try again in a minute.');
 }
 
-/**
- * Gather ALL datasets for a startup and build a comprehensive context string.
- * This feeds the AI with full history so it can give data-driven answers.
- */
+
 async function buildStartupContext(startupId: mongoose.Types.ObjectId | string): Promise<string> {
-    // 1. Profile
+    
     const profile = await StartupProfile.findById(startupId);
     if (!profile) throw new Error('Startup not found');
 
-    // 2. All metrics history (sorted chronologically)
+    
     const allMetrics = await Metrics.find({ startupId }).sort({ period: 1 });
 
-    // 3. All vitality scores
+    
     const allScores = await VitalityScore.find({ startupId }).sort({ period: 1 });
 
-    // 4. Milestones
+    
     const milestones = await Milestone.find({ startupId }).sort({ deadline: 1 });
 
-    // 5. Active alerts
+    
     const alerts = await Alert.find({ startupId, dismissed: false }).sort({ createdAt: -1 });
 
-    // 6. Industry benchmarks (latest period)
+    
     const latestPeriod = allMetrics.length > 0 ? allMetrics[allMetrics.length - 1].period : '';
     const benchmark = latestPeriod
         ? await Benchmark.findOne({ sector: profile.sector, stage: profile.stage, period: latestPeriod })
         : null;
 
-    // Build context
+    
     let context = `
 === STARTUP PROFILE ===
 Company Name: ${profile.companyName}
@@ -114,7 +107,7 @@ Founded: ${profile.foundedDate ? new Date(profile.foundedDate).toISOString().spl
 Description: ${profile.description || 'N/A'}
 `;
 
-    // Metrics history
+    
     if (allMetrics.length > 0) {
         context += `\n=== MONTHLY METRICS HISTORY (${allMetrics.length} months) ===\n`;
         for (const m of allMetrics) {
@@ -127,7 +120,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
 `;
         }
 
-        // Compute growth trends
+        
         context += `\n=== GROWTH TRENDS ===\n`;
         for (let i = 1; i < allMetrics.length; i++) {
             const curr = allMetrics[i];
@@ -142,7 +135,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
         }
     }
 
-    // Vitality scores
+    
     if (allScores.length > 0) {
         context += `\n=== HEALTH SCORE HISTORY ===\n`;
         for (const s of allScores) {
@@ -153,7 +146,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
         }
     }
 
-    // Milestones
+    
     if (milestones.length > 0) {
         context += `\n=== MILESTONES ===\n`;
         for (const m of milestones) {
@@ -163,7 +156,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
         }
     }
 
-    // Alerts
+    
     if (alerts.length > 0) {
         context += `\n=== ACTIVE ALERTS ===\n`;
         for (const a of alerts) {
@@ -171,7 +164,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
         }
     }
 
-    // Benchmarks
+    
     if (benchmark) {
         const bm = benchmark.metrics as any;
         context += `\n=== INDUSTRY BENCHMARKS (${profile.sector} / ${profile.stage}) ===\n`;
@@ -181,7 +174,7 @@ Impact: Direct Jobs ${m.impact.directJobs}, Women Employees ${m.impact.womenEmpl
     return context;
 }
 
-/** System prompt for the AI advisor */
+
 const SYSTEM_PROMPT = `You are VenturePulse AI Advisor — an expert startup strategy consultant with deep expertise in venture capital, startup operations, financial modeling, and growth strategy for the Indian startup ecosystem.
 
 You have been given comprehensive real data about a specific startup: their complete profile, monthly financial & operational metrics history, health scores, milestones, alerts, and industry benchmarks.
@@ -194,9 +187,7 @@ Your job:
 5. Use ₹ (INR) for money, give percentages and growth rates
 6. Be concise but thorough — use bullet points`;
 
-/**
- * Generate AI-powered auto recommendations based on all startup data.
- */
+
 export async function generateAIRecommendations(
     startupId: mongoose.Types.ObjectId | string
 ): Promise<{ advice: { question: string; answer: string }[]; contextSummary: string }> {
@@ -222,14 +213,14 @@ Return ONLY the JSON array, no markdown fences, no extra text.`;
 
         const text = await callOpenRouter(SYSTEM_PROMPT, userPrompt);
 
-        // Parse JSON from response
+        
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
             const advice = JSON.parse(jsonMatch[0]);
             return { advice, contextSummary: `AI analysis powered by ${MODEL}` };
         }
 
-        // If JSON parsing fails, try to split by numbered items
+        
         console.warn('AI response was not valid JSON, using fallback');
         return { advice: getFallbackRecommendations(context), contextSummary: 'AI response format issue, using rule-based' };
     } catch (error: any) {
@@ -238,9 +229,7 @@ Return ONLY the JSON array, no markdown fences, no extra text.`;
     }
 }
 
-/**
- * Answer a custom question using AI with full startup data context.
- */
+
 export async function askAIQuestion(
     startupId: mongoose.Types.ObjectId | string,
     question: string
@@ -264,7 +253,7 @@ Provide a detailed, data-driven answer. Reference specific numbers from the data
 
         const answer = await callOpenRouter(SYSTEM_PROMPT, userPrompt);
 
-        // Extract some key data point mentions for the UI
+        
         const dataPointsUsed: string[] = [];
         if (answer.includes('₹') || answer.includes('revenue') || answer.includes('Revenue')) dataPointsUsed.push('Financial metrics');
         if (answer.includes('user') || answer.includes('User') || answer.includes('churn')) dataPointsUsed.push('Operational metrics');
@@ -284,9 +273,7 @@ Provide a detailed, data-driven answer. Reference specific numbers from the data
     }
 }
 
-/**
- * Get a comprehensive data summary for the frontend context display.
- */
+
 export async function getDataSummary(startupId: mongoose.Types.ObjectId | string): Promise<any> {
     const profile = await StartupProfile.findById(startupId);
     const latestMetrics = await Metrics.findOne({ startupId }).sort({ period: -1 });
@@ -311,7 +298,7 @@ export async function getDataSummary(startupId: mongoose.Types.ObjectId | string
     };
 }
 
-// ---- FALLBACK RULE-BASED FUNCTIONS ----
+
 
 function getFallbackRecommendations(context: string): { question: string; answer: string }[] {
     const advice: { question: string; answer: string }[] = [];

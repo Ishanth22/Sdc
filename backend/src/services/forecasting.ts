@@ -4,13 +4,13 @@ import AnalysisCache from '../models/ForecastCache';
 import mongoose from 'mongoose';
 import { createHash } from 'crypto';
 
-// ─── AI CONFIG ─────────────────────────────────────────────────────────
+
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const MODEL = 'arcee-ai/trinity-large-preview:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// ─── AI CALL WITH RETRY ────────────────────────────────────────────────
+
 
 async function callAI(prompt: string, maxRetries = 2): Promise<string> {
     if (!OPENROUTER_API_KEY) {
@@ -23,7 +23,7 @@ async function callAI(prompt: string, maxRetries = 2): Promise<string> {
             console.log(`[Forecasting AI] Attempt ${attempt + 1}/${maxRetries + 1} — calling ${MODEL}...`);
 
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 90000); // 90s timeout
+            const timeout = setTimeout(() => controller.abort(), 90000); 
 
             const response = await fetch(OPENROUTER_URL, {
                 method: 'POST',
@@ -76,11 +76,11 @@ async function callAI(prompt: string, maxRetries = 2): Promise<string> {
 }
 
 
-// ─── DATA HASH UTILITY ─────────────────────────────────────────────────
+
 
 export function computeMetricsHash(metrics: any[], profile: any, modelOverride?: string): string {
     const dataStr = JSON.stringify({
-        model: modelOverride || MODEL,   // ← include model name so switching model auto-invalidates cache
+        model: modelOverride || MODEL,   
         metrics: metrics.map(m => ({
             period: m.period,
             revenue: m.financial.revenue,
@@ -100,7 +100,7 @@ export function computeMetricsHash(metrics: any[], profile: any, modelOverride?:
     return createHash('sha256').update(dataStr).digest('hex');
 }
 
-// ─── CACHE INVALIDATION ───────────────────────────────────────────────
+
 
 export async function invalidateAllCaches(startupId: mongoose.Types.ObjectId | string): Promise<void> {
     try {
@@ -111,7 +111,7 @@ export async function invalidateAllCaches(startupId: mongoose.Types.ObjectId | s
     }
 }
 
-// ─── INTERFACES ───────────────────────────────────────────────────────
+
 
 export interface ForecastResult {
     currentRunway: number;
@@ -148,7 +148,7 @@ interface RegulatoryRisk {
     applicableSectors: string[];
 }
 
-// ─── SECTOR-SPECIFIC GROWTH PARAMETERS ─────────────────────────────────
+
 
 const SECTOR_PROFILES: Record<string, {
     maxMonthlyGrowthRate: number;
@@ -240,7 +240,7 @@ const SECTOR_PROFILES: Record<string, {
     }
 };
 
-// ─── INDIAN REGULATORY RISKS DATABASE ──────────────────────────────────
+
 
 const REGULATORY_RISKS: RegulatoryRisk[] = [
     {
@@ -341,7 +341,7 @@ const REGULATORY_RISKS: RegulatoryRisk[] = [
     }
 ];
 
-// ─── AI-POWERED FULL FORECAST GENERATOR ────────────────────────────────
+
 
 async function generateAIFullForecast(
     profile: any,
@@ -464,13 +464,13 @@ CRITICAL: Values MUST be realistic integers derived from YOUR analysis of the da
 
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // Validate AI returned proper arrays with 6 entries each
+        
         if (!parsed.revenueForecasts?.length || !parsed.expenseForecasts?.length || !parsed.userForecasts?.length) {
             console.log('[Forecasting AI] AI response missing forecast arrays');
             return null;
         }
 
-        // Build AI-powered revenue forecasts
+        
         const aiRevForecasts = parsed.revenueForecasts.map((f: any) => ({
             period: f.period,
             value: Math.max(0, Math.round(Number(f.value) || 0)),
@@ -489,7 +489,7 @@ CRITICAL: Values MUST be realistic integers derived from YOUR analysis of the da
             type: 'forecast' as const
         }));
 
-        // Compute AI-based runway projections from AI's revenue/expense forecasts
+        
         const latestMetrics = metrics[metrics.length - 1];
         const totalFunding = latestMetrics.financial.totalFunding || 0;
         let remainingCash = totalFunding > 0 ? totalFunding : ruleBasedResult.currentRunway * (latestMetrics.financial.burnRate || 1);
@@ -524,16 +524,20 @@ CRITICAL: Values MUST be realistic integers derived from YOUR analysis of the da
             aiRunoutDate = parsed.projectedRunoutDate || ruleBasedResult.projectedRunoutDate;
         }
 
-        // Build insights array from AI
-        const aiInsightsList: string[] = parsed.insights || [];
+        // Split: bullet insights go to the 'insights' panel, full AI narrative goes to 'aiInsights'
+        const aiBulletInsights: string[] = parsed.insights || [];
+
+        // Build the full AI deep-insights string (Outlook + Critical Action + bullets)
+        const aiDeepInsightParts: string[] = [...aiBulletInsights];
         if (parsed.overallOutlook) {
-            aiInsightsList.push(`📊 Outlook: ${parsed.overallOutlook}`);
+            aiDeepInsightParts.push(`📊 Outlook: ${parsed.overallOutlook}`);
         }
         if (parsed.criticalAction) {
-            aiInsightsList.push(`🎯 Critical Action: ${parsed.criticalAction}`);
+            aiDeepInsightParts.push(`🎯 Critical Action: ${parsed.criticalAction}`);
         }
 
-        // Actual data + AI forecasts
+        // The 'insights' panel (Forecast Insights) shows the rule-based bullets;
+        // the AI bullets are displayed only in the AI Deep Insights panel via aiInsights
         const revenues = metrics.map(m => ({ period: m.period, value: m.financial.revenue }));
         const expenses = metrics.map(m => ({ period: m.period, value: m.financial.monthlyExpenses || m.financial.burnRate }));
         const users = metrics.map(m => ({ period: m.period, value: m.operational.activeUsers }));
@@ -555,11 +559,13 @@ CRITICAL: Values MUST be realistic integers derived from YOUR analysis of the da
                 ...aiUserForecasts
             ],
             runwayForecasts: aiRunwayForecasts,
-            insights: aiInsightsList,
+            // Keep rule-based insights in 'insights' (Forecast Insights panel)
+            insights: ruleBasedResult.insights,
             sectorContext: ruleBasedResult.sectorContext,
             regulatoryRisks: ruleBasedResult.regulatoryRisks,
             confidenceLevel: parsed.confidenceLevel || ruleBasedResult.confidenceLevel,
-            aiInsights: aiInsightsList.join('\n'),
+            // Full AI narrative (bullets + outlook + critical action) goes here
+            aiInsights: aiDeepInsightParts.join('\n'),
             isAIPowered: true,
             cachedAt: new Date().toISOString()
         };
@@ -573,24 +579,15 @@ CRITICAL: Values MUST be realistic integers derived from YOUR analysis of the da
     }
 }
 
-// ─── MAIN FORECASTING FUNCTION ─────────────────────────────────────────
 
-/**
- * Generate 6-month forecasts using AI (primary) with rule-based fallback.
- * 
- * FLOW:
- * 1. Check MongoDB cache — if data hash matches, return cached result (0 API calls)
- * 2. Generate rule-based baseline forecast (math — always works)
- * 3. Call AI to generate full forecast with insights (replaces rule-based if successful)
- * 4. If AI fails, fall back to rule-based
- * 5. Cache result in MongoDB
- */
+
+
 export async function generateForecasts(startupId: mongoose.Types.ObjectId | string): Promise<ForecastResult> {
     const metrics = await Metrics.find({ startupId }).sort({ period: 1 });
     const profile = await StartupProfile.findById(startupId) ||
         await StartupProfile.findOne({ userId: startupId });
 
-    // ─── SMART CACHE CHECK ─────────────────────────────────────────────
+    
     const currentDataHash = computeMetricsHash(metrics, profile);
 
     try {
@@ -612,7 +609,7 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
     const stage = profile?.stage || 'Seed';
     const sectorProfile = SECTOR_PROFILES[sector] || SECTOR_PROFILES.Other;
 
-    // Get applicable regulatory risks
+    
     const applicableRisks = REGULATORY_RISKS.filter(r => r.applicableSectors.includes(sector));
 
     const regulatoryCostImpact = applicableRisks
@@ -647,7 +644,7 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
         };
     }
 
-    // ─── Step 1: Generate rule-based baseline (always works) ───────────
+    
     const revenues = metrics.map(m => ({ period: m.period, value: m.financial.revenue }));
     const expenses = metrics.map(m => ({ period: m.period, value: m.financial.monthlyExpenses || m.financial.burnRate }));
     const users = metrics.map(m => ({ period: m.period, value: m.operational.activeUsers }));
@@ -661,14 +658,14 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
     const expForecast = forecastSeriesSectorAware(expenses, 6, sectorProfile, latestPeriod);
     const userForecast = forecastSeriesSectorAware(users, 6, sectorProfile, latestPeriod);
 
-    // Apply regulatory multipliers
+    
     const regulatoryMultiplier = 1 + (regulatoryCostImpact / 100);
     for (const exp of expForecast) exp.value = Math.round(exp.value * regulatoryMultiplier);
 
     const benefitMultiplier = 1 + (regulatoryBenefit / 100);
     for (const rev of revForecast) rev.value = Math.round(rev.value * benefitMultiplier);
 
-    // Runway projections
+    
     const totalFunding = latestMetrics.financial.totalFunding || 0;
     let remainingCash = totalFunding > 0 ? totalFunding : currentRunway * (latestMetrics.financial.burnRate || 1);
     const runwayForecast: { period: string; value: number; type: 'actual' | 'forecast' }[] = [
@@ -699,7 +696,7 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
         projectedRunoutDate = `${runoutDate.getFullYear()}-${String(runoutDate.getMonth() + 1).padStart(2, '0')}`;
     }
 
-    // Build rule-based insights
+    
     const insights: string[] = [];
     const revTrend = computeGrowthRate(revenues.map(r => r.value));
     const expTrend = computeGrowthRate(expenses.map(e => e.value));
@@ -747,15 +744,15 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
         cachedAt: new Date().toISOString()
     };
 
-    // ─── Step 2: Try AI-powered full forecast ─────────────────────────
+    
     const aiResult = await generateAIFullForecast(
         profile, metrics, ruleBasedResult, sectorProfile, sector, stage
     );
 
-    // Use AI result if successful, otherwise fall back to rule-based
+    
     const finalResult = aiResult || ruleBasedResult;
 
-    // ─── Step 3: Persist to MongoDB cache ─────────────────────────────
+    
     try {
         await AnalysisCache.findOneAndUpdate(
             { startupId, cacheType: 'forecast' },
@@ -778,7 +775,7 @@ export async function generateForecasts(startupId: mongoose.Types.ObjectId | str
     return finalResult;
 }
 
-// ─── SECTOR-AWARE FORECAST FUNCTION (rule-based fallback) ──────────────
+
 
 function forecastSeriesSectorAware(
     data: { period: string; value: number }[],
@@ -850,23 +847,23 @@ function computeGrowthRate(values: number[]): number {
 }
 
 
-// ─── SCENARIO SIMULATION ENGINE ────────────────────────────────────────
+
 
 export interface ScenarioInput {
     scenarioType: 'hire' | 'marketing' | 'funding' | 'expansion' | 'custom';
-    // Hire employees
+    
     numEmployees?: number;
     avgMonthlySalary?: number;
-    // Marketing
+    
     extraMarketingBudget?: number;
     expectedUserGrowthPercent?: number;
-    // Funding
+    
     fundingAmount?: number;
-    // Expansion
+    
     numCities?: number;
     setupCostPerCity?: number;
     revenuePerCityPerMonth?: number;
-    // Custom (legacy)
+    
     revenueChangePercent?: number;
     expenseChangePercent?: number;
     additionalFunding?: number;
@@ -923,7 +920,7 @@ export async function simulateScenario(
 
     const base = { revenue: curRevenue, expenses: curExp, cash: curCash, users: curUsers, churn: curChurn };
 
-    // Risk score helper
+    
     const riskScore = (burn: number, runway: number, churn: number) => {
         let s = 0;
         if (runway < 3)  s += 40; else if (runway < 6) s += 25; else if (runway < 12) s += 10;
@@ -936,13 +933,13 @@ export async function simulateScenario(
     let scenarioLabel = '';
     let summary = '';
 
-    // ── 1. HIRE EMPLOYEES ──────────────────────────────────────────────
+    
     if (input.scenarioType === 'hire') {
         const n       = input.numEmployees || 5;
         const salary  = input.avgMonthlySalary || 60000;
-        const overhead = 0.25; // PF + insurance + equipment
+        const overhead = 0.25; 
         const monthlyCost = n * salary * (1 + overhead);
-        // Revenue ramp: each employee contributes ~0.5x salary in revenue after 3-month ramp
+        
         const revenuePerEmpAtFullRamp = salary * 0.5;
         scenarioLabel = `Hire ${n} Employee${n > 1 ? 's' : ''}`;
         summary = `Adding ${n} employees at ₹${(salary/1000).toFixed(0)}K/mo avg salary (+25% overhead). Revenue ramp-up takes 3 months.`;
@@ -951,33 +948,33 @@ export async function simulateScenario(
             const rampFactor = i < 1 ? 0 : i < 2 ? 0.2 : i < 3 ? 0.5 : 1.0;
             return {
                 revDelta: (revenuePerEmpAtFullRamp * n * rampFactor) / 12,
-                expDelta: i === 0 ? monthlyCost : 0, // one-time step-up
+                expDelta: i === 0 ? monthlyCost : 0, 
                 cashDelta: 0,
-                userDelta: Math.round(n * rampFactor * 2) // support staff helps retention
+                userDelta: Math.round(n * rampFactor * 2) 
             };
         });
     }
 
-    // ── 2. MARKETING CAMPAIGN ──────────────────────────────────────────
+    
     else if (input.scenarioType === 'marketing') {
         const budget  = input.extraMarketingBudget || 200000;
         const growthP = (input.expectedUserGrowthPercent || 20) / 100;
-        const newUsersPerMonth = Math.round((budget / curCAC) * 0.7); // 70% efficiency
+        const newUsersPerMonth = Math.round((budget / curCAC) * 0.7); 
         scenarioLabel = 'Increase Marketing Budget';
         summary = `Extra ₹${(budget/100000).toFixed(1)}L/month in marketing. Estimated ~${newUsersPerMonth} new users/month starting month 2.`;
 
         monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
-            revDelta: i < 2 ? 0 : newUsersPerMonth * arpu * 0.6, // 2-month lag
+            revDelta: i < 2 ? 0 : newUsersPerMonth * arpu * 0.6, 
             expDelta: i === 0 ? budget : 0,
             cashDelta: 0,
             userDelta: i < 1 ? 0 : newUsersPerMonth
         }));
     }
 
-    // ── 3. RAISE FUNDING ───────────────────────────────────────────────
+    
     else if (input.scenarioType === 'funding') {
         const raise = input.fundingAmount || 5000000;
-        const legalCost = Math.round(raise * 0.015); // ~1.5% deal costs
+        const legalCost = Math.round(raise * 0.015); 
         scenarioLabel = `Raise ₹${(raise / 100000).toFixed(0)}L Funding`;
         summary = `Injecting ₹${(raise/100000).toFixed(1)}L. After ~1.5% deal costs (₹${(legalCost/1000).toFixed(0)}K), runway extends significantly.`;
 
@@ -989,24 +986,24 @@ export async function simulateScenario(
         }));
     }
 
-    // ── 4. EXPAND TO NEW MARKETS ───────────────────────────────────────
+    
     else if (input.scenarioType === 'expansion') {
         const cities     = input.numCities || 3;
         const setupCost  = (input.setupCostPerCity || 500000) * cities;
-        const opsCost    = cities * 150000; // monthly ops per city
+        const opsCost    = cities * 150000; 
         const cityRev    = (input.revenuePerCityPerMonth || 200000) * cities;
         scenarioLabel = `Expand to ${cities} New Cit${cities > 1 ? 'ies' : 'y'}`;
         summary = `Setup cost: ₹${(setupCost/100000).toFixed(1)}L. Monthly ops: +₹${(opsCost/1000).toFixed(0)}K. Revenue kicks in from month 3.`;
 
         monthlyDeltas = Array.from({ length: 12 }, (_, i) => ({
-            revDelta: i < 3 ? 0 : cityRev / 12, // revenue ramp after 3 months
-            expDelta: i === 0 ? opsCost : 0, // step-up in ops cost
-            cashDelta: i === 0 ? -setupCost : 0, // one-time setup spend
+            revDelta: i < 3 ? 0 : cityRev / 12, 
+            expDelta: i === 0 ? opsCost : 0, 
+            cashDelta: i === 0 ? -setupCost : 0, 
             userDelta: i < 3 ? 0 : Math.round(cityRev / (arpu || 500))
         }));
     }
 
-    // ── 5. CUSTOM (legacy sliders) ─────────────────────────────────────
+    
     else {
         const revP  = (input.revenueChangePercent || 0) / 100;
         const expP  = (input.expenseChangePercent  || 0) / 100;
@@ -1026,19 +1023,19 @@ export async function simulateScenario(
         }));
     }
 
-    // Run 12-month projection
+    
     const projection = projectMonths(base, monthlyDeltas, 12);
     const finalMonth = projection[11];
 
-    // Break-even: month when cumulative profit turns positive
-    let cumProfit = -(monthlyDeltas[0]?.cashDelta < 0 ? -monthlyDeltas[0].cashDelta : 0); // upfront cost
+    
+    let cumProfit = -(monthlyDeltas[0]?.cashDelta < 0 ? -monthlyDeltas[0].cashDelta : 0); 
     let breakEvenMonth: number | null = null;
     for (const m of projection) {
         cumProfit += m.profit - (base.revenue - base.expenses);
         if (cumProfit >= 0 && breakEvenMonth === null) breakEvenMonth = m.month;
     }
 
-    // Final simulated state
+    
     const simRevenue = finalMonth.revenue;
     const simExp     = finalMonth.expenses;
     const simBurn    = finalMonth.burnRate;

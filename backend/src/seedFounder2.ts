@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// ── Minimal inline schemas ──────────────────────────────────────────────────
+
 const userSchema = new mongoose.Schema({
     name: String, email: String, passwordHash: String,
     role: { type: String, default: 'founder' },
@@ -69,7 +69,7 @@ const subSchema = new mongoose.Schema({
     userId: mongoose.Schema.Types.ObjectId, plan: String
 }, { timestamps: true });
 
-// ── DB Models ───────────────────────────────────────────────────────────────
+
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 const StartupProfile = mongoose.models.StartupProfile || mongoose.model('StartupProfile', profileSchema);
 const Metrics = mongoose.models.Metrics || mongoose.model('Metrics', metricsSchema);
@@ -79,7 +79,7 @@ const CustomKPI = mongoose.models.CustomKPI || mongoose.model('CustomKPI', kpiSc
 const Organization = mongoose.models.Organization || mongoose.model('Organization', orgSchema);
 const Subscription = mongoose.models.Subscription || mongoose.model('Subscription', subSchema);
 
-// ── Helper ──────────────────────────────────────────────────────────────────
+
 function score(rev: number, revPrev: number, users: number, usersPrev: number,
     burn: number, churn: number, runway: number) {
     const rg = revPrev > 0 ? Math.min(100, Math.max(0, ((rev - revPrev) / revPrev) * 200)) : 50;
@@ -96,13 +96,13 @@ function score(rev: number, revPrev: number, users: number, usersPrev: number,
     return { total: Math.max(0, Math.min(100, total)), components: { revenueGrowth: Math.round(rg), userGrowth: Math.round(ug), burnEfficiency: Math.round(be), churnStability: Math.round(cs), runwayStability: Math.round(rs) }, flags };
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────
+
 async function seed() {
     console.log('🔗 Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI!);
     console.log('✅ Connected\n');
 
-    // ── 1. Create / reset user + org + subscription ───────────────────────
+    
     const email = 'founder2@nspms.in';
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -114,13 +114,13 @@ async function seed() {
     const user = await User.create({
         name: 'Priya Nair',
         email,
-        passwordHash: hashed,   // ← must match what auth.ts reads
+        passwordHash: hashed,   
         role: 'founder',
         isActive: true,
         failedLoginAttempts: 0
     });
 
-    // Create Organization (required so auth/me works correctly)
+    
     const org = await Organization.create({
         name: 'PaisaPro Fintech',
         ownerId: user._id,
@@ -131,11 +131,11 @@ async function seed() {
     user.orgRole = 'owner';
     await user.save();
 
-    // Create Subscription (enterprise so all features are accessible)
+    
     await Subscription.create({ userId: user._id, plan: 'enterprise' });
     console.log('👤 Created user:', email);
 
-    // ── 2. Startup Profile ─────────────────────────────────────────────────
+    
     await StartupProfile.deleteOne({ userId: user._id });
     const profile = await StartupProfile.create({
         userId: user._id,
@@ -152,21 +152,21 @@ async function seed() {
     });
     console.log('🏢 Created profile: PaisaPro Fintech');
 
-    // ── 3. Metrics (9 months: Jul 2024 → Mar 2025) ─────────────────────────
-    // Fintech startup with:
-    // - Strong revenue growth (NBFC license boost in Q4)
-    // - Very high burn (tech infra + RBI compliance costs)
-    // - Dangerously low runway (4-5 months by end)
-    // - High churn early, improving later
-    // - Low LTV/CAC ratio (classic fintech early problem)
+    
+    
+    
+    
+    
+    
+    
     const monthsData = [
-        // period, revenue, expenses, burnRate, runway, funding, users, newUsers, cac, ltv, churn, rnd, jobs
+        
         ['2024-07', 180000, 980000, 1050000, 11, 12000000, 3200, 800, 3200, 8500, 14.5, 180000, 12],
         ['2024-08', 220000, 1080000, 1150000, 9, 12000000, 4100, 1100, 3000, 8800, 13.2, 195000, 13],
         ['2024-09', 310000, 1200000, 1280000, 8, 12000000, 5600, 1700, 2800, 9100, 12.1, 210000, 14],
         ['2024-10', 420000, 1350000, 1420000, 7, 12000000, 7800, 2500, 2600, 9400, 10.8, 230000, 14],
         ['2024-11', 580000, 1480000, 1550000, 6, 12000000, 11200, 3800, 2400, 9800, 9.5, 250000, 15],
-        ['2024-12', 760000, 1600000, 1680000, 5, 12000000, 15500, 5100, 2200, 10200, 8.4, 270000, 16], // NBFC provisional
+        ['2024-12', 760000, 1600000, 1680000, 5, 12000000, 15500, 5100, 2200, 10200, 8.4, 270000, 16], 
         ['2025-01', 940000, 1750000, 1830000, 4, 12000000, 20800, 6200, 2000, 10600, 7.6, 290000, 17],
         ['2025-02', 1150000, 1900000, 1980000, 3, 12000000, 27100, 7400, 1850, 11000, 6.9, 310000, 18],
         ['2025-03', 1380000, 2050000, 2140000, 3, 12000000, 34500, 8600, 1700, 11400, 6.2, 330000, 18],
@@ -209,7 +209,7 @@ async function seed() {
         console.log(`  📊 ${period}: Rev ₹${((rev as number) / 1000).toFixed(0)}K | Users ${users} | Score ${s.total} | Runway ${runway}mo`);
     }
 
-    // ── 4. Milestones ──────────────────────────────────────────────────────
+    
     await Milestone.deleteMany({ startupId: profile._id });
     const milestones = [
         { title: 'RBI NBFC Provisional License', category: 'legal', completionPercent: 100, completed: true, deadline: new Date('2024-11-30'), description: 'Obtain provisional NBFC license from Reserve Bank of India for micro-lending operations' },
@@ -235,7 +235,7 @@ async function seed() {
     }
     console.log(`\n🎯 Created ${milestones.length} milestones`);
 
-    // ── 5. Custom KPIs ─────────────────────────────────────────────────────
+    
     await CustomKPI.deleteMany({ startupId: profile._id });
     const kpis = [
         {

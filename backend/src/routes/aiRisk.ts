@@ -5,7 +5,7 @@ import { generateAIRiskPrediction, generateAIBenchmarkAnalysis } from '../servic
 
 const router = Router();
 
-// GET /api/ai-risk/predict – AI-powered risk prediction
+
 router.get('/predict', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });
@@ -18,7 +18,7 @@ router.get('/predict', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// GET /api/ai-risk/benchmark – AI-powered benchmark analysis
+
 router.get('/benchmark', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const profile = await StartupProfile.findOne({ userId: req.user!._id });

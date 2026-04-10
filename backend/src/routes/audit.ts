@@ -4,7 +4,7 @@ import { authenticate, requireFeature, requireAdmin, AuthRequest } from '../midd
 
 const router = Router();
 
-// GET /api/audit – get audit logs for current user
+
 router.get('/', authenticate, requireFeature('audit_logs'), async (req: AuthRequest, res: Response) => {
     try {
         const limit = Math.min(Number(req.query.limit) || 50, 200);
@@ -20,7 +20,7 @@ router.get('/', authenticate, requireFeature('audit_logs'), async (req: AuthRequ
     }
 });
 
-// GET /api/audit/all – admin gets all audit logs
+
 router.get('/all', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const limit = Math.min(Number(req.query.limit) || 50, 200);

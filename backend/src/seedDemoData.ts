@@ -1,8 +1,4 @@
-/**
- * Demo data seed — populates 8 months of realistic metrics, milestones,
- * custom KPIs, and vitality scores for the demo founder account.
- * Run with: npx ts-node src/seedDemoData.ts
- */
+
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -21,7 +17,7 @@ async function seedDemoData() {
     await mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://lmelvindenish_db_user:melvindenish@cluster0.t5hb9cw.mongodb.net/nspms?appName=Cluster0');
     console.log('✅ Connected\n');
 
-    // Find the demo founder
+    
     const user = await User.findOne({ email: 'founder1@nspms.in' });
     if (!user) {
         console.error('❌ Founder account not found. Run seed.ts first.');
@@ -37,15 +33,15 @@ async function seedDemoData() {
     const startupId = profile._id;
     console.log(`📊 Seeding demo data for: ${profile.companyName} (${startupId})\n`);
 
-    // ─── Clear existing demo data ─────────────────────────────────────
+    
     await Metrics.deleteMany({ startupId });
     await Milestone.deleteMany({ startupId });
     await CustomKPI.deleteMany({ startupId });
     await VitalityScore.deleteMany({ startupId });
     console.log('🗑️  Cleared existing data\n');
 
-    // ─── 8 months of metrics (Aug 2024 → Mar 2025) ───────────────────
-    // Realistic SaaS startup: growing revenue, managed burn, improving metrics
+    
+    
     const metricsData = [
         {
             period: '2024-08',
@@ -111,7 +107,7 @@ async function seedDemoData() {
         process.stdout.write(`✅ Metrics + VitalityScore: ${m.period}\n`);
     }
 
-    // ─── MILESTONES ───────────────────────────────────────────────────
+    
     const now = new Date();
     const milestonesData = [
         {
@@ -232,7 +228,7 @@ async function seedDemoData() {
     }
     console.log(`\n✅ ${milestonesData.length} milestones seeded`);
 
-    // ─── CUSTOM KPIs ──────────────────────────────────────────────────
+    
     const periods = metricsData.map(m => m.period);
 
     await CustomKPI.create({
@@ -296,7 +292,7 @@ async function seedDemoData() {
 
     console.log('✅ 4 custom KPIs seeded');
 
-    // ─── Update profile with more detail ─────────────────────────────
+    
     await StartupProfile.findByIdAndUpdate(startupId, {
         companyName: 'NovaSaaS Technologies',
         sector: 'SaaS',

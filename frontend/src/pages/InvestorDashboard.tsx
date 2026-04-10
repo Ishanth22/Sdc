@@ -94,7 +94,7 @@ const InvestorDashboard: React.FC = () => {
                     )}
                 </div>
 
-                {/* Filters */}
+                {}
                 <div className="flex flex-wrap gap-3 mb-6">
                     <input
                         type="text" placeholder="Search startups..."
@@ -123,7 +123,7 @@ const InvestorDashboard: React.FC = () => {
                     </select>
                 </div>
 
-                {/* Compare Panel */}
+                {}
                 {showCompare && compareData && compareData.length === 2 && (
                     <div className="bg-slate-900/70 border border-indigo-500/20 rounded-2xl p-6 mb-8 animate-fade-in">
                         <div className="flex items-center justify-between mb-4">
@@ -154,7 +154,7 @@ const InvestorDashboard: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* Radar chart comparison */}
+                        {}
                         {compareData[0].latestScore && compareData[1].latestScore && (
                             <div className="bg-slate-800/30 rounded-xl p-4">
                                 <h4 className="text-sm font-semibold text-white mb-3 text-center">Score Component Comparison</h4>
@@ -179,7 +179,7 @@ const InvestorDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/* Startup Cards Grid */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtered.map((s: any) => (
                         <div key={s._id}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
-    CartesianGrid, BarChart, Bar
+    CartesianGrid, BarChart, Bar, Cell
 } from 'recharts';
 import api from '../api/client';
 import Navbar from '../components/Navbar';
@@ -34,19 +34,19 @@ const Simulation: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Hire
+    
     const [numEmployees, setNumEmployees] = useState(5);
     const [avgSalary, setAvgSalary] = useState(60000);
-    // Marketing
+    
     const [marketingBudget, setMarketingBudget] = useState(200000);
     const [userGrowth, setUserGrowth] = useState(20);
-    // Funding
+    
     const [fundingAmount, setFundingAmount] = useState(5000000);
-    // Expansion
+    
     const [numCities, setNumCities] = useState(3);
     const [setupCost, setSetupCost] = useState(500000);
     const [cityRevenue, setCityRevenue] = useState(200000);
-    // Custom
+    
     const [revChange, setRevChange] = useState(0);
     const [expChange, setExpChange] = useState(0);
     const [addFunding, setAddFunding] = useState(0);
@@ -78,13 +78,13 @@ const Simulation: React.FC = () => {
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                {/* Header */}
+                {}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-white">🔬 Decision Simulator</h1>
                     <p className="text-sm text-slate-400 mt-1">Test business decisions before you make them — see the 12-month impact on runway, growth, profitability & risk</p>
                 </div>
 
-                {/* Scenario Selector */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
                     {SCENARIOS.map(s => (
                         <button key={s.type} onClick={() => { setActiveScenario(s.type); setResult(null); }}
@@ -99,7 +99,7 @@ const Simulation: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Configuration */}
+                    {}
                     <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-6">
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r ${active.color} rounded-lg text-white text-sm font-semibold mb-4`}>
                             <span>{active.emoji}</span> {active.title}
@@ -214,7 +214,7 @@ const Simulation: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right: Results */}
+                    {}
                     <div className="lg:col-span-2 space-y-6">
                         {!result && !loading && (
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-12 flex flex-col items-center justify-center text-center">
@@ -225,7 +225,7 @@ const Simulation: React.FC = () => {
                         )}
 
                         {result && (<>
-                            {/* Summary Banner */}
+                            {}
                             <div className={`bg-gradient-to-r ${active.color} rounded-xl p-4 text-white`}>
                                 <div className="flex items-center justify-between mb-1">
                                     <span className="font-bold text-lg">{result.scenario}</span>
@@ -239,7 +239,7 @@ const Simulation: React.FC = () => {
                                 <p className="text-sm opacity-80">{result.summary}</p>
                             </div>
 
-                            {/* Impact Cards */}
+                            {}
                             <div className="grid grid-cols-4 gap-3">
                                 {[
                                     { label: 'Revenue/mo', cur: result.current.revenue, sim: result.simulated.revenue, fmt: true },
@@ -262,7 +262,7 @@ const Simulation: React.FC = () => {
                                 })}
                             </div>
 
-                            {/* 12-Month Line Chart — Revenue vs Expenses */}
+                            {}
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-white mb-1">12-Month Revenue vs Expenses</h3>
                                 <p className="text-xs text-slate-500 mb-4">Month-by-month financials after the decision</p>
@@ -285,7 +285,7 @@ const Simulation: React.FC = () => {
                                 </ResponsiveContainer>
                             </div>
 
-                            {/* Monthly Profit / Loss bars */}
+                            {/* Monthly Profit / Loss — single bar series, colored per cell */}
                             <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-white mb-1">Monthly Profit / Loss</h3>
                                 <p className="text-xs text-slate-500 mb-4">Green = profitable month&nbsp;&nbsp;·&nbsp;&nbsp;Red = loss month</p>
@@ -293,9 +293,7 @@ const Simulation: React.FC = () => {
                                     <BarChart
                                         data={result.monthlyProjection.map((m: any) => ({
                                             month: m.month,
-                                            profit: m.profit >= 0 ? m.profit : 0,
-                                            loss: m.profit < 0 ? m.profit : 0,
-                                            label: m.profit,
+                                            profitLoss: m.profit ?? (m.revenue - m.expenses),
                                         }))}
                                         margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
                                     >
@@ -303,25 +301,43 @@ const Simulation: React.FC = () => {
                                         <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `M${v}`} />
                                         <YAxis
                                             tick={{ fill: '#64748b', fontSize: 11 }}
-                                            tickFormatter={v => v >= 100000 ? `${(v/100000).toFixed(1)}L` : v >= 1000 ? `${(v/1000).toFixed(0)}K` : String(Math.abs(v))}
+                                            tickFormatter={v => {
+                                                const abs = Math.abs(v);
+                                                return abs >= 100000 ? `${(v / 100000).toFixed(1)}L` : abs >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v);
+                                            }}
                                             domain={['auto', 'auto']}
                                             width={56}
                                         />
                                         <Tooltip
-                                            formatter={(v: any, name?: string) => [fmt(Math.abs(Number(v ?? 0))), name === 'profit' ? 'Profit' : 'Loss']}
+                                            formatter={(v: any) => {
+                                                const val = Number(v ?? 0);
+                                                return [fmt(Math.abs(val)), val >= 0 ? '✅ Profit' : '🔴 Loss'];
+                                            }}
                                             contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8 }}
                                             labelFormatter={l => `Month ${l}`}
                                         />
-                                        <Legend wrapperStyle={{ fontSize: 11 }} />
-                                        <Bar dataKey="profit" name="Profit" fill="#22c55e" radius={[3, 3, 0, 0]} />
-                                        <Bar dataKey="loss" name="Loss" fill="#f87171" radius={[3, 3, 0, 0]} />
+                                        <Bar dataKey="profitLoss" radius={[3, 3, 0, 0]}>
+                                            {result.monthlyProjection.map((m: any, i: number) => {
+                                                const val = m.profit ?? (m.revenue - m.expenses);
+                                                return <Cell key={i} fill={val >= 0 ? '#22c55e' : '#f87171'} />;
+                                            })}
+                                        </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
+                                {/* Inline legend */}
+                                <div className="flex gap-4 justify-center mt-2">
+                                    <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                                        <span className="w-3 h-3 rounded-sm bg-green-500 inline-block" /> Profit
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                                        <span className="w-3 h-3 rounded-sm bg-red-400 inline-block" /> Loss
+                                    </span>
+                                </div>
                             </div>
 
-                            {/* Comparison Table + Insights side by side */}
+                            {}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Comparison Table */}
+                                {}
                                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl overflow-hidden">
                                     <div className="px-4 py-3 border-b border-slate-800/40">
                                         <h3 className="text-sm font-semibold text-white">Before vs After (Month 12)</h3>
@@ -348,7 +364,7 @@ const Simulation: React.FC = () => {
                                     </table>
                                 </div>
 
-                                {/* Insights */}
+                                {}
                                 <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-sm font-semibold text-white">Key Insights</h3>
