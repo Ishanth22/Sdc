@@ -77,7 +77,7 @@ const History: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {metrics.map((m, i) => {
+                                {metrics.map((m, _i) => {
                                     const sc = scores.find(s => s.period === m.period);
                                     return (
                                         <tr key={m._id} className="border-t border-slate-800/30 hover:bg-indigo-500/5 transition-colors">
