@@ -28,6 +28,7 @@ const app = express();
 // CORS — allow local dev and Vercel production frontend
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://sdc-delta.vercel.app',
   process.env.FRONTEND_URL || '',
 ].filter(Boolean);
 
