@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://venturepulse-backend.onrender.com/api/:path*"
+      "destination": "https://venturepulse-back.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
